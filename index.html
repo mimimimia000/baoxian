@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>自由幻想 · 商人装备馆</title>
+    <title>自由幻想 · 金商保险装备馆</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -20,7 +20,6 @@
             min-height: 100vh;
         }
 
-        /* 动态背景 */
         .bg {
             position: fixed; inset: 0; z-index: -1;
             background: radial-gradient(ellipse at top, #1a1a2e 0%, var(--bg) 70%);
@@ -33,7 +32,6 @@
             background-size: 200px 200px;
         }
 
-        /* 顶部 */
         header {
             background: rgba(10,10,15,0.9);
             border-bottom: 1px solid var(--border);
@@ -56,9 +54,8 @@
             font-size: 1.3rem; -webkit-text-fill-color: initial;
         }
 
-        /* 管理按钮 */
         .admin-btns {
-            display: none; /* 默认隐藏 */
+            display: none; /* 默认隐藏，登录才显示 */
             gap: 0.8rem;
         }
         .btn {
@@ -84,7 +81,6 @@
             color: #f87171;
         }
 
-        /* 主导航 */
         .main-nav {
             max-width: 1400px; margin: 0 auto; padding: 0 2rem;
             display: flex; gap: 0.5rem; overflow-x: auto;
@@ -103,12 +99,10 @@
             height: 2px; background: var(--gold); border-radius: 1px;
         }
 
-        /* 内容区 */
         .container {
             max-width: 1400px; margin: 0 auto; padding: 2rem;
         }
 
-        /* 二级导航（大区/职业） */
         .sub-nav {
             display: flex; gap: 1rem; margin-bottom: 2rem;
             flex-wrap: wrap; align-items: center;
@@ -126,14 +120,12 @@
             background: rgba(255,215,0,0.15); border-color: var(--gold); color: var(--gold);
         }
 
-        /* 三级导航（装备分类） */
         .category-nav {
             display: flex; gap: 0.8rem; margin-bottom: 2rem;
             flex-wrap: wrap; padding-bottom: 1rem;
             border-bottom: 1px solid rgba(255,255,255,0.05);
         }
 
-        /* 装备网格 */
         .equip-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -176,7 +168,7 @@
 
         .equip-info { padding: 1.2rem; }
         .equip-name {
-            font-size: 1.1rem; font-weight: bold; color: var(--gold-light);
+            font-size: 1.1rem; font-weight: bold; color: var(--gold);
             margin-bottom: 0.3rem;
         }
         .equip-meta {
@@ -206,13 +198,11 @@
             background: var(--gold); color: #000;
         }
 
-        /* 空状态 */
         .empty-state {
             text-align: center; padding: 4rem 2rem; color: rgba(255,255,255,0.3);
         }
         .empty-state .icon { font-size: 4rem; margin-bottom: 1rem; }
 
-        /* 模态框 */
         .modal-overlay {
             display: none; position: fixed; inset: 0;
             background: rgba(0,0,0,0.8); z-index: 1000;
@@ -291,7 +281,6 @@
             display: flex; justify-content: flex-end; gap: 1rem;
         }
 
-        /* 攻略文章 */
         .article-card {
             background: var(--card); border: 1px solid var(--border);
             border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem;
@@ -302,7 +291,7 @@
             transform: translateX(5px);
         }
         .article-title {
-            font-size: 1.2rem; color: var(--gold-light); margin-bottom: 0.5rem;
+            font-size: 1.2rem; color: var(--gold); margin-bottom: 0.5rem;
         }
         .article-meta {
             display: flex; gap: 1rem; font-size: 0.8rem;
@@ -312,7 +301,6 @@
             color: rgba(255,255,255,0.6); line-height: 1.6;
         }
 
-        /* 角色展示 */
         .char-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -342,7 +330,6 @@
         .char-stat-value { font-size: 1.3rem; color: var(--gold); font-weight: bold; }
         .char-stat-label { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 0.2rem; }
 
-        /* 数据管理 */
         .data-actions {
             background: var(--card); border: 1px solid var(--border);
             border-radius: 16px; padding: 2rem; margin-bottom: 2rem;
@@ -352,16 +339,14 @@
             padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);
         }
         .data-row:last-child { border-bottom: none; }
-        .data-info h4 { color: var(--gold-light); margin-bottom: 0.3rem; }
+        .data-info h4 { color: var(--gold); margin-bottom: 0.3rem; }
         .data-info p { font-size: 0.85rem; color: rgba(255,255,255,0.5); }
 
-        /* 滚动条 */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: var(--bg); }
         ::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.2); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(255,215,0,0.4); }
 
-        /* 提示 */
         .toast {
             position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px);
             background: var(--card); border: 1px solid var(--gold);
@@ -371,7 +356,6 @@
         }
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        /* 批量操作栏 */
         .batch-bar {
             display: none; position: fixed; bottom: 2rem; left: 50%;
             transform: translateX(-50%); background: var(--card);
@@ -381,10 +365,40 @@
             align-items: center; gap: 1rem;
         }
         .batch-bar.active { display: flex; }
+
+        /* 登录弹窗样式 */
+        .login-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+            z-index: 2000; display: none; align-items: center; justify-content: center;
+        }
+        .login-modal.active { display: flex; }
+        .login-box {
+            background: var(--card); border: 1px solid var(--gold);
+            border-radius: 16px; padding: 2rem; width: 100%; max-width: 400px;
+            text-align: center;
+        }
+        .login-title { color: var(--gold); font-size: 1.4rem; margin-bottom: 1.5rem; }
+        .login-input {
+            width: 100%; padding: 0.8rem 1rem; margin-bottom: 1rem;
+            background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+            border-radius: 8px; color: #fff; font-size: 1rem;
+        }
+        .login-btn {
+            width: 100%; padding: 0.8rem; background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <div class="bg"></div><div class="stars"></div>
+    <!-- 登录弹窗 -->
+    <div class="login-modal" id="loginModal">
+        <div class="login-box">
+            <div class="login-title">管理员登录</div>
+            <input type="password" class="login-input" id="adminPwd" placeholder="请输入管理密码">
+            <button class="login-btn" onclick="checkLogin()">登录</button>
+        </div>
+    </div>
 
     <header>
         <div class="header-inner">
@@ -415,9 +429,7 @@
         </div>
     </header>
 
-    <div class="container" id="mainContainer">
-        <!-- 动态内容 -->
-    </div>
+    <div class="container" id="mainContainer"></div>
 
     <!-- 添加装备模态框 -->
     <div class="modal-overlay" id="modalEquip">
@@ -652,59 +664,38 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        // ==============================================
-        // 管理员密码（你自己修改这里！）
-        const ADMIN_PASSWORD = "123456";
-        // ==============================================
-
-        // 数据存储
-        let data = JSON.parse(localStorage.getItem('ffo_data')) || {
-            equipments: [],
-            articles: [],
-            characters: []
-        };
-
-        let currentTab = 'equip';
-        let currentServer = '全部';
-        let currentJob = '全部';
-        let currentCategory = '全部';
+        // 核心：权限控制（默认游客，登录才显示管理按钮）
+        const ADMIN_PASSWORD = "123456"; // 你的管理密码，可修改
+        let isAdmin = false;
+        let data = JSON.parse(localStorage.getItem('ffo_data')) || { equipments: [], articles: [], characters: [] };
+        let currentTab = 'equip', currentServer = '全部', currentJob = '全部', currentCategory = '全部';
         let tempImage = null;
-        let isAdmin = false; // 默认不是管理员
 
-        // 初始化
+        // 初始化：双击页面弹出登录（游客看不到按钮）
         document.addEventListener('DOMContentLoaded', () => {
             renderContent();
             setupDragDrop();
-            checkAdmin();
+            // 双击页面触发登录
+            document.body.addEventListener('dblclick', () => {
+                if(!isAdmin) document.getElementById('loginModal').classList.add('active');
+            });
+            updateDataStats();
         });
 
-        // 检查是否已登录
-        function checkAdmin() {
-            if(localStorage.getItem('isAdmin') === 'true'){
+        // 登录验证
+        function checkLogin() {
+            const pwd = document.getElementById('adminPwd').value.trim();
+            if(pwd === ADMIN_PASSWORD) {
                 isAdmin = true;
-                showAdminPanel();
+                document.getElementById('loginModal').classList.remove('active');
+                document.getElementById('adminBtns').style.display = 'flex'; // 显示管理按钮
+                showToast('✅ 管理员登录成功！');
+            } else {
+                showToast('❌ 密码错误，请重试');
             }
         }
 
-        // 显示管理员面板
-        function showAdminPanel() {
-            document.getElementById('adminBtns').style.display = 'flex';
-        }
-
-        // 登录验证（你自己用）
-        function loginAdmin(){
-            let pwd = prompt("请输入管理员密码：");
-            if(pwd === ADMIN_PASSWORD){
-                isAdmin = true;
-                localStorage.setItem('isAdmin', 'true');
-                showAdminPanel();
-                showToast("✅ 管理员登录成功");
-            }else{
-                showToast("❌ 密码错误");
-            }
-        }
-
-        // 切换主标签（游客也能看）
+        // 切换标签
         function switchTab(tab, btn) {
             currentTab = tab;
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
@@ -712,32 +703,21 @@
             renderContent();
         }
 
-        // 渲染内容
+        // 渲染内容（游客只能看，不能改）
         function renderContent() {
             const container = document.getElementById('mainContainer');
-            
             switch(currentTab) {
-                case 'equip':
-                    container.innerHTML = renderEquipPage();
-                    break;
-                case 'article':
-                    container.innerHTML = renderArticlePage();
-                    break;
-                case 'onsale':
-                    container.innerHTML = renderOnsalePage();
-                    break;
-                case 'char':
-                    container.innerHTML = renderCharPage();
-                    break;
+                case 'equip': container.innerHTML = renderEquipPage(); break;
+                case 'article': container.innerHTML = renderArticlePage(); break;
+                case 'onsale': container.innerHTML = renderOnsalePage(); break;
+                case 'char': container.innerHTML = renderCharPage(); break;
             }
         }
 
-        // 装备区页面
         function renderEquipPage() {
             const servers = ['全部', '好玩区', '如春城', '天都区'];
             const jobs = ['全部', '刺客', '药师', '术士', '剑客', '战士'];
             const categories = ['全部', '宠物', '攻血套', '徽章', '基础装备', '杂货'];
-
             let html = `
                 <div class="sub-nav">
                     <span class="sub-label">大区：</span>
@@ -752,19 +732,12 @@
                     ${categories.map(c => `<button class="chip ${currentCategory===c?'active':''}" onclick="filterCategory('${c}')">${c}</button>`).join('')}
                 </div>
             `;
-
             let items = data.equipments;
             if (currentServer !== '全部') items = items.filter(i => i.server === currentServer);
             if (currentJob !== '全部') items = items.filter(i => i.job === currentJob);
             if (currentCategory !== '全部') items = items.filter(i => i.category === currentCategory);
-
             if (items.length === 0) {
-                html += `
-                    <div class="empty-state">
-                        <div class="icon">📦</div>
-                        <h3>暂无装备</h3>
-                    </div>
-                `;
+                html += `<div class="empty-state"><div class="icon">📦</div><h3>暂无装备</h3><p>管理员正在添加中</p></div>`;
             } else {
                 html += '<div class="equip-grid">' + items.map(item => `
                     <div class="equip-card">
@@ -783,336 +756,127 @@
                             ${item.note ? `<div style="font-size:0.8rem;color:var(--orange);margin-bottom:0.8rem;">💡 ${item.note}</div>` : ''}
                             <div class="equip-price">
                                 <span class="price-tag">${item.price || '面议'}</span>
-                                <button class="contact-btn" onclick="showToast('需要购买请联系商人')">联系购买</button>
+                                <button class="contact-btn" onclick="showToast('联系商人：mimimimia000')">联系购买</button>
                             </div>
                         </div>
                     </div>
                 `).join('') + '</div>';
             }
-
             return html;
         }
 
         function getGradeText(g) {
-            const map = {orange:'传说', purple:'史诗', red:'神话', blue:'稀有', green:'精良'};
-            return map[g] || g;
+            const map={orange:'传说',purple:'史诗',red:'神话',blue:'稀有',green:'精良'};
+            return map[g]||g;
         }
 
-        // 攻略页面
         function renderArticlePage() {
-            if (data.articles.length === 0) {
-                return `
-                    <div class="empty-state">
-                        <div class="icon">📖</div>
-                        <h3>暂无攻略</h3>
-                    </div>
-                `;
-            }
-            return data.articles.map(art => `
+            if(data.articles.length===0) return `<div class="empty-state"><div class="icon">📖</div><h3>暂无攻略</h3></div>`;
+            return data.articles.map(art=>`
                 <div class="article-card">
                     <div class="article-title">${art.title}</div>
-                    <div class="article-meta">
-                        <span>⚔️ ${art.job}</span>
-                        <span>📌 ${art.type}</span>
-                        <span>📅 ${art.date}</span>
-                    </div>
+                    <div class="article-meta"><span>⚔️ ${art.job}</span><span>📌 ${art.type}</span><span>📅 ${art.date}</span></div>
                     <div class="article-excerpt">${art.content.substring(0,200)}${art.content.length>200?'...':''}</div>
                 </div>
             `).join('');
         }
 
-        // 寄售页面
         function renderOnsalePage() {
-            let items = data.equipments.filter(i => i.price && i.price !== '面议');
-            if (items.length === 0) {
-                return `
-                    <div class="empty-state">
-                        <div class="icon">💎</div>
-                        <h3>暂无寄售装备</h3>
+            let items=data.equipments.filter(i=>i.price&&i.price!=='面议');
+            if(items.length===0) return `<div class="empty-state"><div class="icon">💎</div><h3>暂无寄售装备</h3></div>`;
+            return `<div class="equip-grid">${items.map(item=>`
+                <div class="equip-card">
+                    <div class="equip-img-wrap">
+                        <span class="equip-badge badge-${item.grade}">${getGradeText(item.grade)}</span>
+                        <img src="${item.image}" alt="${item.name}" loading="lazy">
                     </div>
-                `;
-            }
-            return `
-                <div class="equip-grid">
-                    ${items.map(item => `
-                        <div class="equip-card">
-                            <div class="equip-img-wrap">
-                                <span class="equip-badge badge-${item.grade}">${getGradeText(item.grade)}</span>
-                                <img src="${item.image}" alt="${item.name}" loading="lazy">
-                            </div>
-                            <div class="equip-info">
-                                <div class="equip-name">${item.name}</div>
-                                <div class="equip-meta">
-                                    <span>📍 ${item.server}</span>
-                                    <span>⚔️ ${item.job}</span>
-                                </div>
-                                <div class="equip-price">
-                                    <span class="price-tag">${item.price}</span>
-                                    <button class="contact-btn">联系购买</button>
-                                </div>
-                            </div>
+                    <div class="equip-info">
+                        <div class="equip-name">${item.name}</div>
+                        <div class="equip-meta"><span>📍 ${item.server}</span><span>⚔️ ${item.job}</span></div>
+                        <div class="equip-price">
+                            <span class="price-tag">${item.price}</span>
+                            <button class="contact-btn">联系购买</button>
                         </div>
-                    `).join('')}
+                    </div>
                 </div>
-            `;
+            `).join('')}</div>`;
         }
 
-        // 角色页面
         function renderCharPage() {
-            if (data.characters.length === 0) {
-                return `
-                    <div class="empty-state">
-                        <div class="icon">🎭</div>
-                        <h3>暂无角色</h3>
+            if(data.characters.length===0) return `<div class="empty-state"><div class="icon">🎭</div><h3>暂无角色</h3></div>`;
+            return `<div class="char-grid">${data.characters.map(ch=>`
+                <div class="char-card">
+                    <img src="${ch.image||'https://api.dicebear.com/7.x/avataaars/svg?seed='+ch.name}" class="char-avatar" alt="${ch.name}">
+                    <div class="char-name">${ch.name}</div>
+                    <div class="char-server">${ch.server} · ${ch.job}</div>
+                    <div class="char-stats">
+                        <div class="char-stat"><div class="char-stat-value">${ch.power||'?'}</div><div class="char-stat-label">战力</div></div>
+                        <div class="char-stat"><div class="char-stat-value">${data.equipments.filter(e=>e.server===ch.server&&e.job===ch.job).length}</div><div class="char-stat-label">装备</div></div>
                     </div>
-                `;
-            }
-            return `
-                <div class="char-grid">
-                    ${data.characters.map(ch => `
-                        <div class="char-card">
-                            <img src="${ch.image || 'https://api.dicebear.com/7.x/avataaars/svg?seed='+ch.name}" class="char-avatar" alt="${ch.name}">
-                            <div class="char-name">${ch.name}</div>
-                            <div class="char-server">${ch.server} · ${ch.job}</div>
-                            <div class="char-stats">
-                                <div class="char-stat">
-                                    <div class="char-stat-value">${ch.power || '?'}</div>
-                                    <div class="char-stat-label">战力</div>
-                                </div>
-                                <div class="char-stat">
-                                    <div class="char-stat-value">${data.equipments.filter(e=>e.server===ch.server && e.job===ch.job).length}</div>
-                                    <div class="char-stat-label">装备</div>
-                                </div>
-                            </div>
-                        </div>
-                    `).join('')}
                 </div>
-            `;
+            `).join('')}</div>`;
         }
 
-        // 筛选
-        function filterServer(s) { currentServer = s; renderContent(); }
-        function filterJob(j) { currentJob = j; renderContent(); }
-        function filterCategory(c) { currentCategory = c; renderContent(); }
+        function filterServer(s){currentServer=s;renderContent();}
+        function filterJob(j){currentJob=j;renderContent();}
+        function filterCategory(c){currentCategory=c;renderContent();}
 
-        // 模态框（必须管理员才能打开）
-        function openModal(type) {
-            if(!isAdmin){
-                loginAdmin();
-                return;
-            }
-            document.getElementById('modal' + type.charAt(0).toUpperCase() + type.slice(1)).classList.add('active');
+        // 模态框控制（仅管理员可用）
+        function openModal(type){
+            if(!isAdmin){showToast('❌ 仅管理员可操作');return;}
+            document.getElementById('modal'+type.charAt(0).toUpperCase()+type.slice(1)).classList.add('active');
         }
-        function closeModal(type) {
-            document.getElementById('modal' + type.charAt(0).toUpperCase() + type.slice(1)).classList.remove('active');
-            if (type === 'equip') {
-                tempImage = null;
-                document.getElementById('previewImg').classList.remove('active');
-                document.getElementById('fileInput').value = '';
-                ['eqName','eqPrice','eqStats','eqNote'].forEach(id => document.getElementById(id).value = '');
-            }
+        function closeModal(type){
+            document.getElementById('modal'+type.charAt(0).toUpperCase()+type.slice(1)).classList.remove('active');
+            if(type==='equip'){tempImage=null;document.getElementById('previewImg').classList.remove('active');document.getElementById('fileInput').value='';['eqName','eqPrice','eqStats','eqNote'].forEach(id=>document.getElementById(id).value='');}
         }
 
-        // 文件处理
-        function handleFileSelect(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                tempImage = ev.target.result;
-                document.getElementById('previewImg').src = tempImage;
-                document.getElementById('previewImg').classList.add('active');
-            };
-            reader.readAsDataURL(file);
+        function handleFileSelect(e){
+            if(!isAdmin)return;
+            const file=e.target.files[0];if(!file)return;
+            const reader=new FileReader();reader.onload=(ev)=>{tempImage=ev.target.result;document.getElementById('previewImg').src=tempImage;document.getElementById('previewImg').classList.add('active');};reader.readAsDataURL(file);
+        }
+        function handleCharFile(e){
+            if(!isAdmin)return;
+            const file=e.target.files[0];if(!file)return;
+            const reader=new FileReader();reader.onload=(ev)=>{document.getElementById('charPreview').src=ev.target.result;document.getElementById('charPreview').classList.add('active');document.getElementById('charPreview').dataset.image=ev.target.result;};reader.readAsDataURL(file);
         }
 
-        function handleCharFile(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                document.getElementById('charPreview').src = ev.target.result;
-                document.getElementById('charPreview').classList.add('active');
-                document.getElementById('charPreview').dataset.image = ev.target.result;
-            };
-            reader.readAsDataURL(file);
+        function setupDragDrop(){
+            const area=document.getElementById('uploadArea');['dragenter','dragover','dragleave','drop'].forEach(eventName=>{area.addEventListener(eventName,(e)=>{e.preventDefault();e.stopPropagation();});});['dragenter','dragover'].forEach(eventName=>{area.addEventListener(eventName,()=>area.classList.add('dragover'));});['dragleave','drop'].forEach(eventName=>{area.addEventListener(eventName,()=>area.classList.remove('dragover'));});area.addEventListener('drop',(e)=>{if(!isAdmin)return;const file=e.dataTransfer.files[0];if(file&&file.type.startsWith('image/')){const reader=new FileReader();reader.onload=(ev)=>{tempImage=ev.target.result;document.getElementById('previewImg').src=tempImage;document.getElementById('previewImg').classList.add('active');};reader.readAsDataURL(file);}});
         }
 
-        // 拖拽上传
-        function setupDragDrop() {
-            const area = document.getElementById('uploadArea');
-            ['dragenter','dragover','dragleave','drop'].forEach(eventName => {
-                area.addEventListener(eventName, (e) => {
-                    e.preventDefault(); e.stopPropagation();
-                });
-            });
-            ['dragenter','dragover'].forEach(eventName => {
-                area.addEventListener(eventName, () => area.classList.add('dragover'));
-            });
-            ['dragleave','drop'].forEach(eventName => {
-                area.addEventListener(eventName, () => area.classList.remove('dragover'));
-            });
-            area.addEventListener('drop', (e) => {
-                const file = e.dataTransfer.files[0];
-                if (file && file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        tempImage = ev.target.result;
-                        document.getElementById('previewImg').src = tempImage;
-                        document.getElementById('previewImg').classList.add('active');
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
+        // 保存操作（仅管理员）
+        function saveEquipment(){
+            if(!isAdmin){showToast('❌ 无权限');return;}
+            const name=document.getElementById('eqName').value.trim();const server=document.getElementById('eqServer').value;const job=document.getElementById('eqJob').value;const category=document.getElementById('eqCategory').value;
+            if(!name||!server||!job||!category){showToast('请填写必填项');return;}
+            const equip={id:Date.now(),name,server,job,category,grade:document.getElementById('eqGrade').value,price:document.getElementById('eqPrice').value.trim()||'面议',stats:document.getElementById('eqStats').value.trim(),note:document.getElementById('eqNote').value.trim(),image:tempImage||'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200"><rect fill="%23151520" width="300" height="200"/><text fill="%23ffd700" x="50%" y="50%" text-anchor="middle">暂无图片</text></svg>',date:new Date().toLocaleDateString()};
+            data.equipments.unshift(equip);saveData();closeModal('equip');renderContent();showToast('✅ 装备添加成功！');
+        }
+        function saveArticle(){
+            if(!isAdmin){showToast('❌ 无权限');return;}
+            const title=document.getElementById('artTitle').value.trim();if(!title){showToast('请输入标题');return;}
+            data.articles.unshift({id:Date.now(),title,job:document.getElementById('artJob').value,type:document.getElementById('artType').value,content:document.getElementById('artContent').value.trim(),date:new Date().toLocaleDateString()});
+            saveData();closeModal('article');renderContent();showToast('✅ 攻略发布成功！');
+        }
+        function saveCharacter(){
+            if(!isAdmin){showToast('❌ 无权限');return;}
+            const name=document.getElementById('charName').value.trim();if(!name){showToast('请输入角色名');return;}
+            data.characters.push({id:Date.now(),name,server:document.getElementById('charServer').value,job:document.getElementById('charJob').value,power:document.getElementById('charPower').value.trim(),image:document.getElementById('charPreview').dataset.image||null});
+            saveData();closeModal('char');renderContent();showToast('✅ 角色添加成功！');
         }
 
-        // 保存装备（管理员权限）
-        function saveEquipment() {
-            if(!isAdmin) return;
-            const name = document.getElementById('eqName').value.trim();
-            const server = document.getElementById('eqServer').value;
-            const job = document.getElementById('eqJob').value;
-            const category = document.getElementById('eqCategory').value;
-            
-            if (!name || !server || !job || !category) {
-                showToast('请填写必填项（名称、大区、职业、分类）');
-                return;
-            }
+        function saveData(){localStorage.setItem('ffo_data',JSON.stringify(data));updateDataStats();}
+        function updateDataStats(){document.getElementById('dataStats').textContent=`装备：${data.equipments.length} | 攻略：${data.articles.length} | 角色：${data.characters.length}`;}
+        function exportData(){if(!isAdmin)return;const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`ffo_backup_${new Date().toLocaleDateString()}.json`;a.click();URL.revokeObjectURL(url);showToast('✅ 数据已导出');}
+        function importData(e){if(!isAdmin)return;const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=(ev)=>{try{const imported=JSON.parse(ev.target.result);if(imported.equipments&&imported.articles&&imported.characters){data=imported;saveData();renderContent();showToast('✅ 数据导入成功！');}else throw new Error('格式错误');}catch(err){showToast('❌ 文件格式错误');}};reader.readAsText(file);}
+        function clearAllData(){if(!isAdmin)return;if(confirm('确定清空所有数据？不可恢复！')){data={equipments:[],articles:[],characters:[]};saveData();renderContent();showToast('🗑️ 数据已清空');}}
+        function showToast(msg){const toast=document.getElementById('toast');toast.textContent=msg;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),3000);}
 
-            const equip = {
-                id: Date.now(),
-                name, server, job, category,
-                grade: document.getElementById('eqGrade').value,
-                price: document.getElementById('eqPrice').value.trim() || '面议',
-                stats: document.getElementById('eqStats').value.trim(),
-                note: document.getElementById('eqNote').value.trim(),
-                image: tempImage || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200"><rect fill="%23151520" width="300" height="200"/><text fill="%23ffd700" x="50%" y="50%" text-anchor="middle">暂无图片</text></svg>',
-                date: new Date().toLocaleDateString()
-            };
-
-            data.equipments.unshift(equip);
-            saveData();
-            closeModal('equip');
-            renderContent();
-            showToast('✅ 装备添加成功！');
-        }
-
-        // 保存攻略
-        function saveArticle() {
-            if(!isAdmin) return;
-            const title = document.getElementById('artTitle').value.trim();
-            if (!title) { showToast('请输入攻略标题'); return; }
-
-            data.articles.unshift({
-                id: Date.now(),
-                title,
-                job: document.getElementById('artJob').value,
-                type: document.getElementById('artType').value,
-                content: document.getElementById('artContent').value.trim(),
-                date: new Date().toLocaleDateString()
-            });
-
-            saveData();
-            closeModal('article');
-            renderContent();
-            showToast('✅ 攻略发布成功！');
-        }
-
-        // 保存角色
-        function saveCharacter() {
-            if(!isAdmin) return;
-            const name = document.getElementById('charName').value.trim();
-            if (!name) { showToast('请输入角色名'); return; }
-
-            data.characters.push({
-                id: Date.now(),
-                name,
-                server: document.getElementById('charServer').value,
-                job: document.getElementById('charJob').value,
-                power: document.getElementById('charPower').value.trim(),
-                image: document.getElementById('charPreview').dataset.image || null
-            });
-
-            saveData();
-            closeModal('char');
-            renderContent();
-            showToast('✅ 角色添加成功！');
-        }
-
-        // 数据持久化
-        function saveData() {
-            localStorage.setItem('ffo_data', JSON.stringify(data));
-        }
-
-        // 导出
-        function exportData() {
-            if(!isAdmin) return;
-            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `ffo_backup_${new Date().toLocaleDateString()}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-            showToast('✅ 数据已导出');
-        }
-
-        // 导入
-        function importData(e) {
-            if(!isAdmin) return;
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                try {
-                    const imported = JSON.parse(ev.target.result);
-                    if (imported.equipments && imported.articles && imported.characters) {
-                        data = imported;
-                        saveData();
-                        renderContent();
-                        showToast('✅ 数据导入成功！');
-                    } else {
-                        throw new Error('格式错误');
-                    }
-                } catch(err) {
-                    showToast('❌ 文件格式错误');
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        // 清空
-        function clearAllData() {
-            if(!isAdmin) return;
-            if (confirm('确定要清空所有数据吗？此操作不可恢复！')) {
-                data = { equipments: [], articles: [], characters: [] };
-                saveData();
-                renderContent();
-                showToast('🗑️ 数据已清空');
-            }
-        }
-
-        // 提示
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            toast.textContent = msg;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
-        }
-
-        // 点击外部关闭
-        document.querySelectorAll('.modal-overlay').forEach(overlay => {
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) overlay.classList.remove('active');
-            });
-        });
-
-        // 键盘ESC关闭
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
-            }
-        });
+        // 点击外部/ESC关闭弹窗
+        document.querySelectorAll('.modal-overlay').forEach(overlay=>{overlay.addEventListener('click',(e)=>{if(e.target===overlay)overlay.classList.remove('active');});});
+        document.addEventListener('keydown',(e)=>{if(e.key==='Escape'){document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('active'));document.getElementById('loginModal').classList.remove('active');}});
     </script>
 </body>
 </html>
