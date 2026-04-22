@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自由幻想 · 商人装备馆</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --gold: #ffd700; --gold-dark: #b8860b; --bg: #0a0a0f; --card: #151520;
+            --border: rgba(255,215,0,0.15); --red: #ef4444; --blue: #3b82f6;
+            --green: #10b981; --purple: #8b5cf6; --orange: #f97316;
+        }
+
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            background: var(--bg);
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        /* 动态背景 */
+        .bg {
+            position: fixed; inset: 0; z-index: -1;
+            background: radial-gradient(ellipse at top, #1a1a2e 0%, var(--bg) 70%);
+        }
+        .stars {
+            position: fixed; inset: 0; z-index: -1;
+            background-image: radial-gradient(2px 2px at 20px 30px, rgba(255,215,0,0.3), transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(1px 1px at 90px 40px, rgba(255,215,0,0.3), transparent);
+            background-size: 200px 200px;
+        }
+
+        /* 顶部 */
+        header {
+            background: rgba(10,10,15,0.9);
+            border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 100;
+            backdrop-filter: blur(20px);
+        }
+        .header-inner {
+            max-width: 1400px; margin: 0 auto; padding: 1rem 2rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .logo {
+            display: flex; align-items: center; gap: 0.8rem;
+            font-size: 1.3rem; font-weight: bold;
+            background: linear-gradient(135deg, var(--gold) 0%, #fff 50%, var(--gold) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .logo-icon {
+            width: 40px; height: 40px; background: linear-gradient(135deg, var(--gold), var(--orange));
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem; -webkit-text-fill-color: initial;
+        }
+
+        /* 管理按钮 */
+        .admin-btns {
+            display: flex; gap: 0.8rem;
+        }
+        .btn {
+            padding: 0.6rem 1.2rem; border-radius: 8px; border: none;
+            cursor: pointer; font-size: 0.9rem; transition: all 0.3s;
+            display: flex; align-items: center; gap: 0.4rem;
+        }
+        .btn-gold {
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            color: #000; font-weight: bold;
+        }
+        .btn-gold:hover {
+            box-shadow: 0 0 20px rgba(255,215,0,0.4); transform: translateY(-2px);
+        }
+        .btn-outline {
+            background: transparent; border: 1px solid var(--border); color: var(--gold);
+        }
+        .btn-outline:hover {
+            background: rgba(255,215,0,0.1); border-color: var(--gold);
+        }
+        .btn-danger {
+            background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4);
+            color: #f87171;
+        }
+
+        /* 主导航 */
+        .main-nav {
+            max-width: 1400px; margin: 0 auto; padding: 0 2rem;
+            display: flex; gap: 0.5rem; overflow-x: auto;
+        }
+        .nav-tab {
+            padding: 1rem 1.5rem; background: none; border: none;
+            color: rgba(255,255,255,0.5); cursor: pointer;
+            font-size: 1rem; position: relative; white-space: nowrap;
+            transition: color 0.3s;
+        }
+        .nav-tab:hover, .nav-tab.active {
+            color: var(--gold);
+        }
+        .nav-tab.active::after {
+            content: ''; position: absolute; bottom: 0; left: 20%; right: 20%;
+            height: 2px; background: var(--gold); border-radius: 1px;
+        }
+
+        /* 内容区 */
+        .container {
+            max-width: 1400px; margin: 0 auto; padding: 2rem;
+        }
+
+        /* 二级导航（大区/职业） */
+        .sub-nav {
+            display: flex; gap: 1rem; margin-bottom: 2rem;
+            flex-wrap: wrap; align-items: center;
+        }
+        .sub-label {
+            color: rgba(255,255,255,0.4); font-size: 0.85rem;
+        }
+        .chip {
+            padding: 0.4rem 1rem; border-radius: 20px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.7); cursor: pointer; font-size: 0.9rem;
+            transition: all 0.3s; white-space: nowrap;
+        }
+        .chip:hover, .chip.active {
+            background: rgba(255,215,0,0.15); border-color: var(--gold); color: var(--gold);
+        }
+
+        /* 三级导航（装备分类） */
+        .category-nav {
+            display: flex; gap: 0.8rem; margin-bottom: 2rem;
+            flex-wrap: wrap; padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* 装备网格 */
+        .equip-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .equip-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 16px; overflow: hidden;
+            transition: all 0.3s; position: relative;
+        }
+        .equip-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255,215,0,0.3);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        .equip-img-wrap {
+            position: relative; height: 220px;
+            background: radial-gradient(circle at center, rgba(255,215,0,0.05) 0%, transparent 70%);
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+        }
+        .equip-img-wrap img {
+            max-width: 90%; max-height: 90%; object-fit: contain;
+            transition: transform 0.3s;
+        }
+        .equip-card:hover .equip-img-wrap img {
+            transform: scale(1.05);
+        }
+        .equip-badge {
+            position: absolute; top: 1rem; right: 1rem;
+            padding: 0.3rem 0.8rem; border-radius: 6px;
+            font-size: 0.75rem; font-weight: bold;
+        }
+        .badge-orange { background: rgba(249,115,22,0.2); color: #fb923c; border: 1px solid rgba(249,115,22,0.3); }
+        .badge-purple { background: rgba(139,92,246,0.2); color: #a78bfa; border: 1px solid rgba(139,92,246,0.3); }
+        .badge-red { background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+        .badge-blue { background: rgba(59,130,246,0.2); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+        .badge-green { background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+
+        .equip-info { padding: 1.2rem; }
+        .equip-name {
+            font-size: 1.1rem; font-weight: bold; color: var(--gold-light);
+            margin-bottom: 0.3rem;
+        }
+        .equip-meta {
+            display: flex; gap: 0.8rem; font-size: 0.8rem;
+            color: rgba(255,255,255,0.5); margin-bottom: 1rem;
+        }
+        .equip-meta span {
+            display: flex; align-items: center; gap: 0.3rem;
+        }
+        .equip-price {
+            display: flex; align-items: center; justify-content: space-between;
+            padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .price-tag {
+            font-size: 1.3rem; color: var(--gold); font-weight: bold;
+        }
+        .price-tag::before {
+            content: '💰 '; font-size: 1rem;
+        }
+        .contact-btn {
+            padding: 0.5rem 1rem; background: rgba(255,215,0,0.1);
+            border: 1px solid var(--gold); color: var(--gold);
+            border-radius: 6px; cursor: pointer; font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+        .contact-btn:hover {
+            background: var(--gold); color: #000;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center; padding: 4rem 2rem; color: rgba(255,255,255,0.3);
+        }
+        .empty-state .icon { font-size: 4rem; margin-bottom: 1rem; }
+
+        /* 模态框 */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.8); z-index: 1000;
+            align-items: center; justify-content: center;
+            padding: 2rem;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 20px; width: 100%; max-width: 700px;
+            max-height: 90vh; overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+        .modal-header {
+            padding: 1.5rem; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-title { font-size: 1.3rem; color: var(--gold); }
+        .modal-close {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: rgba(255,255,255,0.05); border: none;
+            color: rgba(255,255,255,0.5); cursor: pointer;
+            font-size: 1.5rem; display: flex; align-items: center; justify-content: center;
+        }
+        .modal-close:hover { background: rgba(239,68,68,0.2); color: #f87171; }
+
+        .modal-body { padding: 1.5rem; }
+        .form-group { margin-bottom: 1.2rem; }
+        .form-label {
+            display: block; margin-bottom: 0.5rem;
+            color: rgba(255,255,255,0.7); font-size: 0.9rem;
+        }
+        .form-input, .form-select, .form-textarea {
+            width: 100%; padding: 0.8rem 1rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px; color: #fff; font-size: 0.95rem;
+            transition: all 0.3s; font-family: inherit;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none; border-color: var(--gold);
+            background: rgba(255,215,0,0.05);
+        }
+        .form-select option { background: var(--card); color: #fff; }
+        .form-textarea { min-height: 80px; resize: vertical; }
+
+        .upload-area {
+            border: 2px dashed rgba(255,215,0,0.3);
+            border-radius: 12px; padding: 2rem;
+            text-align: center; cursor: pointer;
+            transition: all 0.3s; position: relative;
+            background: rgba(255,215,0,0.02);
+        }
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--gold); background: rgba(255,215,0,0.05);
+        }
+        .upload-area input[type="file"] {
+            position: absolute; inset: 0; opacity: 0; cursor: pointer;
+        }
+        .upload-preview {
+            max-width: 100%; max-height: 200px;
+            border-radius: 8px; margin-top: 1rem;
+            display: none;
+        }
+        .upload-preview.active { display: block; }
+
+        .form-row {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+        }
+        @media (max-width: 600px) {
+            .form-row { grid-template-columns: 1fr; }
+        }
+
+        .modal-footer {
+            padding: 1.5rem; border-top: 1px solid var(--border);
+            display: flex; justify-content: flex-end; gap: 1rem;
+        }
+
+        /* 攻略文章 */
+        .article-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem;
+            transition: all 0.3s;
+        }
+        .article-card:hover {
+            border-color: rgba(255,215,0,0.2);
+            transform: translateX(5px);
+        }
+        .article-title {
+            font-size: 1.2rem; color: var(--gold-light); margin-bottom: 0.5rem;
+        }
+        .article-meta {
+            display: flex; gap: 1rem; font-size: 0.8rem;
+            color: rgba(255,255,255,0.4); margin-bottom: 1rem;
+        }
+        .article-excerpt {
+            color: rgba(255,255,255,0.6); line-height: 1.6;
+        }
+
+        /* 角色展示 */
+        .char-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        .char-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 16px; overflow: hidden; text-align: center;
+            transition: all 0.3s;
+        }
+        .char-card:hover {
+            border-color: rgba(255,215,0,0.3);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .char-avatar {
+            width: 100px; height: 100px; border-radius: 50%;
+            margin: 2rem auto 1rem; border: 3px solid var(--gold);
+            object-fit: cover;
+        }
+        .char-name { font-size: 1.2rem; font-weight: bold; margin-bottom: 0.3rem; }
+        .char-server { color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-bottom: 1rem; }
+        .char-stats {
+            display: flex; justify-content: center; gap: 2rem;
+            padding: 1rem; background: rgba(255,255,255,0.02);
+        }
+        .char-stat { text-align: center; }
+        .char-stat-value { font-size: 1.3rem; color: var(--gold); font-weight: bold; }
+        .char-stat-label { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 0.2rem; }
+
+        /* 数据管理 */
+        .data-actions {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 16px; padding: 2rem; margin-bottom: 2rem;
+        }
+        .data-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .data-row:last-child { border-bottom: none; }
+        .data-info h4 { color: var(--gold-light); margin-bottom: 0.3rem; }
+        .data-info p { font-size: 0.85rem; color: rgba(255,255,255,0.5); }
+
+        /* 滚动条 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,215,0,0.4); }
+
+        /* 提示 */
+        .toast {
+            position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: var(--card); border: 1px solid var(--gold);
+            color: var(--gold); padding: 1rem 2rem; border-radius: 12px;
+            z-index: 2000; opacity: 0; transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* 批量操作栏 */
+        .batch-bar {
+            display: none; position: fixed; bottom: 2rem; left: 50%;
+            transform: translateX(-50%); background: var(--card);
+            border: 1px solid var(--gold); border-radius: 12px;
+            padding: 1rem 2rem; z-index: 99;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            align-items: center; gap: 1rem;
+        }
+        .batch-bar.active { display: flex; }
+    </style>
+</head>
+<body>
+    <div class="bg"></div><div class="stars"></div>
+
+    <header>
+        <div class="header-inner">
+            <div class="logo">
+                <div class="logo-icon">⚔️</div>
+                <span>自由幻想 · 商人装备馆</span>
+            </div>
+            <div class="admin-btns">
+                <button class="btn btn-gold" onclick="openModal('equip')">
+                    <span>➕</span> 添加装备
+                </button>
+                <button class="btn btn-outline" onclick="openModal('article')">
+                    <span>📝</span> 写攻略
+                </button>
+                <button class="btn btn-outline" onclick="openModal('char')">
+                    <span>👤</span> 添加角色
+                </button>
+                <button class="btn btn-outline" onclick="openModal('data')">
+                    <span>⚙️</span> 数据管理
+                </button>
+            </div>
+        </div>
+        <div class="main-nav" id="mainNav">
+            <button class="nav-tab active" onclick="switchTab('equip', this)">🏹 装备区</button>
+            <button class="nav-tab" onclick="switchTab('article', this)">📖 游戏攻略</button>
+            <button class="nav-tab" onclick="switchTab('onsale', this)">💎 寄售装备</button>
+            <button class="nav-tab" onclick="switchTab('char', this)">🎭 我的角色</button>
+        </div>
+    </header>
+
+    <div class="container" id="mainContainer">
+        <!-- 动态内容 -->
+    </div>
+
+    <!-- 添加装备模态框 -->
+    <div class="modal-overlay" id="modalEquip">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">➕ 添加新装备</div>
+                <button class="modal-close" onclick="closeModal('equip')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                        <input type="file" id="fileInput" accept="image/*" onchange="handleFileSelect(event)">
+                        <div style="font-size: 3rem; margin-bottom: 0.5rem;">📷</div>
+                        <div style="color: var(--gold); font-weight: bold; margin-bottom: 0.3rem;">点击上传装备截图</div>
+                        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.4);">支持拖拽上传，建议尺寸 800x600</div>
+                        <img class="upload-preview" id="previewImg">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">装备名称 *</label>
+                        <input type="text" class="form-input" id="eqName" placeholder="如：混沌·灭世之刃 +15">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">所属大区 *</label>
+                        <select class="form-select" id="eqServer">
+                            <option value="">请选择大区</option>
+                            <option value="好玩区">好玩区</option>
+                            <option value="如春城">如春城</option>
+                            <option value="天都区">天都区</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">职业 *</label>
+                        <select class="form-select" id="eqJob">
+                            <option value="">请选择职业</option>
+                            <option value="刺客">🗡️ 刺客</option>
+                            <option value="药师">💚 药师</option>
+                            <option value="术士">🔮 术士</option>
+                            <option value="剑客">⚔️ 剑客</option>
+                            <option value="战士">🛡️ 战士</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">装备分类 *</label>
+                        <select class="form-select" id="eqCategory">
+                            <option value="">请选择分类</option>
+                            <option value="宠物">🐾 宠物</option>
+                            <option value="攻血套">❤️ 攻血套</option>
+                            <option value="徽章">🏅 徽章</option>
+                            <option value="基础装备">🛡️ 基础装备</option>
+                            <option value="杂货">📦 杂货</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">品质</label>
+                        <select class="form-select" id="eqGrade">
+                            <option value="orange">🟠 传说（橙）</option>
+                            <option value="purple">🟣 史诗（紫）</option>
+                            <option value="red">🔴 神话（红）</option>
+                            <option value="blue">🔵 稀有（蓝）</option>
+                            <option value="green">🟢 精良（绿）</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">寄售价格（金）</label>
+                        <input type="text" class="form-input" id="eqPrice" placeholder="如：5000000 或 面议">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">装备属性（每行一个）</label>
+                    <textarea class="form-textarea" id="eqStats" placeholder="物理攻击 +12580&#10;暴击率 +25.5%&#10;力量 +320"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">备注</label>
+                    <input type="text" class="form-input" id="eqNote" placeholder="如：可小刀、仅限天都区交易">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('equip')">取消</button>
+                <button class="btn btn-gold" onclick="saveEquipment()">💾 保存装备</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加攻略模态框 -->
+    <div class="modal-overlay" id="modalArticle">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">📝 发布攻略</div>
+                <button class="modal-close" onclick="closeModal('article')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">攻略标题</label>
+                    <input type="text" class="form-input" id="artTitle" placeholder="如：刺客PK连招技巧详解">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">职业</label>
+                        <select class="form-select" id="artJob">
+                            <option value="通用">📋 通用</option>
+                            <option value="刺客">🗡️ 刺客</option>
+                            <option value="药师">💚 药师</option>
+                            <option value="术士">🔮 术士</option>
+                            <option value="剑客">⚔️ 剑客</option>
+                            <option value="战士">🛡️ 战士</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">类型</label>
+                        <select class="form-select" id="artType">
+                            <option value="攻略">⚔️ 战斗攻略</option>
+                            <option value="赚钱">💰 赚钱心得</option>
+                            <option value="装备">🛡️ 装备打造</option>
+                            <option value="其他">📌 其他</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">攻略内容</label>
+                    <textarea class="form-textarea" id="artContent" rows="8" placeholder="在这里写攻略内容..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('article')">取消</button>
+                <button class="btn btn-gold" onclick="saveArticle()">💾 发布</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加角色模态框 -->
+    <div class="modal-overlay" id="modalChar">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">🎭 添加角色</div>
+                <button class="modal-close" onclick="closeModal('char')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <div class="upload-area" onclick="document.getElementById('charFile').click()">
+                        <input type="file" id="charFile" accept="image/*" onchange="handleCharFile(event)">
+                        <div style="font-size: 3rem;">👤</div>
+                        <div style="color: var(--gold); font-weight: bold;">上传角色截图</div>
+                        <img class="upload-preview" id="charPreview">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">角色名</label>
+                        <input type="text" class="form-input" id="charName" placeholder="角色名称">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">所属大区</label>
+                        <select class="form-select" id="charServer">
+                            <option value="好玩区">好玩区</option>
+                            <option value="如春城">如春城</option>
+                            <option value="天都区">天都区</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">职业</label>
+                        <select class="form-select" id="charJob">
+                            <option value="刺客">🗡️ 刺客</option>
+                            <option value="药师">💚 药师</option>
+                            <option value="术士">🔮 术士</option>
+                            <option value="剑客">⚔️ 剑客</option>
+                            <option value="战士">🛡️ 战士</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">战力</label>
+                        <input type="text" class="form-input" id="charPower" placeholder="如：285430">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('char')">取消</button>
+                <button class="btn btn-gold" onclick="saveCharacter()">💾 保存角色</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 数据管理模态框 -->
+    <div class="modal-overlay" id="modalData">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">⚙️ 数据管理</div>
+                <button class="modal-close" onclick="closeModal('data')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="data-actions">
+                    <div class="data-row">
+                        <div class="data-info">
+                            <h4>📤 导出数据</h4>
+                            <p>将所有装备、攻略、角色数据导出为JSON文件备份</p>
+                        </div>
+                        <button class="btn btn-gold" onclick="exportData()">导出</button>
+                    </div>
+                    <div class="data-row">
+                        <div class="data-info">
+                            <h4>📥 导入数据</h4>
+                            <p>从之前导出的JSON文件恢复数据</p>
+                        </div>
+                        <input type="file" id="importFile" accept=".json" onchange="importData(event)" style="display:none">
+                        <button class="btn btn-outline" onclick="document.getElementById('importFile').click()">选择文件</button>
+                    </div>
+                    <div class="data-row">
+                        <div class="data-info">
+                            <h4>🗑️ 清空数据</h4>
+                            <p style="color: var(--red)">危险操作！将删除所有数据且不可恢复</p>
+                        </div>
+                        <button class="btn btn-danger" onclick="clearAllData()">清空</button>
+                    </div>
+                    <div class="data-row">
+                        <div class="data-info">
+                            <h4>📊 当前统计</h4>
+                            <p id="dataStats">装备：0 | 攻略：0 | 角色：0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 数据存储
+        let data = JSON.parse(localStorage.getItem('ffo_data')) || {
+            equipments: [],
+            articles: [],
+            characters: []
+        };
+
+        let currentTab = 'equip';
+        let currentServer = '全部';
+        let currentJob = '全部';
+        let currentCategory = '全部';
+        let tempImage = null;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            renderContent();
+            setupDragDrop();
+        });
+
+        // 切换主标签
+        function switchTab(tab, btn) {
+            currentTab = tab;
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            renderContent();
+        }
+
+        // 渲染内容
+        function renderContent() {
+            const container = document.getElementById('mainContainer');
+            
+            switch(currentTab) {
+                case 'equip':
+                    container.innerHTML = renderEquipPage();
+                    break;
+                case 'article':
+                    container.innerHTML = renderArticlePage();
+                    break;
+                case 'onsale':
+                    container.innerHTML = renderOnsalePage();
+                    break;
+                case 'char':
+                    container.innerHTML = renderCharPage();
+                    break;
+            }
+        }
+
+        // 装备区页面
+        function renderEquipPage() {
+            const servers = ['全部', '好玩区', '如春城', '天都区'];
+            const jobs = ['全部', '刺客', '药师', '术士', '剑客', '战士'];
+            const categories = ['全部', '宠物', '攻血套', '徽章', '基础装备', '杂货'];
+
+            let html = `
+                <div class="sub-nav">
+                    <span class="sub-label">大区：</span>
+                    ${servers.map(s => `<button class="chip ${currentServer===s?'active':''}" onclick="filterServer('${s}')">${s}</button>`).join('')}
+                </div>
+                <div class="sub-nav">
+                    <span class="sub-label">职业：</span>
+                    ${jobs.map(j => `<button class="chip ${currentJob===j?'active':''}" onclick="filterJob('${j}')">${j}</button>`).join('')}
+                </div>
+                <div class="category-nav">
+                    <span class="sub-label">分类：</span>
+                    ${categories.map(c => `<button class="chip ${currentCategory===c?'active':''}" onclick="filterCategory('${c}')">${c}</button>`).join('')}
+                </div>
+            `;
+
+            let items = data.equipments;
+            if (currentServer !== '全部') items = items.filter(i => i.server === currentServer);
+            if (currentJob !== '全部') items = items.filter(i => i.job === currentJob);
+            if (currentCategory !== '全部') items = items.filter(i => i.category === currentCategory);
+
+            if (items.length === 0) {
+                html += `
+                    <div class="empty-state">
+                        <div class="icon">📦</div>
+                        <h3>暂无装备</h3>
+                        <p>点击右上角「添加装备」开始录入</p>
+                    </div>
+                `;
+            } else {
+                html += '<div class="equip-grid">' + items.map(item => `
+                    <div class="equip-card">
+                        <div class="equip-img-wrap">
+                            <span class="equip-badge badge-${item.grade}">${getGradeText(item.grade)}</span>
+                            <img src="${item.image}" alt="${item.name}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22200%22><rect fill=%22%23151520%22 width=%22300%22 height=%22200%22/><text fill=%22%23ffd700%22 x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22>暂无图片</text></svg>'">
+                        </div>
+                        <div class="equip-info">
+                            <div class="equip-name">${item.name}</div>
+                            <div class="equip-meta">
+                                <span>📍 ${item.server}</span>
+                                <span>⚔️ ${item.job}</span>
+                                <span>📂 ${item.category}</span>
+                            </div>
+                            ${item.stats ? `<div style="font-size:0.85rem;color:rgba(255,255,255,0.6);margin-bottom:0.8rem;line-height:1.6;">${item.stats.replace(/\n/g,'<br>')}</div>` : ''}
+                            ${item.note ? `<div style="font-size:0.8rem;color:var(--orange);margin-bottom:0.8rem;">💡 ${item.note}</div>` : ''}
+                            <div class="equip-price">
+                                <span class="price-tag">${item.price || '面议'}</span>
+                                <button class="contact-btn" onclick="showToast('已复制联系方式到剪贴板')">联系购买</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('') + '</div>';
+            }
+
+            return html;
+        }
+
+        function getGradeText(g) {
+            const map = {orange:'传说', purple:'史诗', red:'神话', blue:'稀有', green:'精良'};
+            return map[g] || g;
+        }
+
+        // 攻略页面
+        function renderArticlePage() {
+            if (data.articles.length === 0) {
+                return `
+                    <div class="empty-state">
+                        <div class="icon">📖</div>
+                        <h3>暂无攻略</h3>
+                        <p>点击右上角「写攻略」分享你的心得</p>
+                    </div>
+                `;
+            }
+            return data.articles.map(art => `
+                <div class="article-card">
+                    <div class="article-title">${art.title}</div>
+                    <div class="article-meta">
+                        <span>⚔️ ${art.job}</span>
+                        <span>📌 ${art.type}</span>
+                        <span>📅 ${art.date}</span>
+                    </div>
+                    <div class="article-excerpt">${art.content.substring(0,200)}${art.content.length>200?'...':''}</div>
+                </div>
+            `).join('');
+        }
+
+        // 寄售页面（只显示有价格的装备）
+        function renderOnsalePage() {
+            let items = data.equipments.filter(i => i.price && i.price !== '面议');
+            if (items.length === 0) {
+                return `
+                    <div class="empty-state">
+                        <div class="icon">💎</div>
+                        <h3>暂无寄售装备</h3>
+                        <p>添加装备时填写价格即可在此展示</p>
+                    </div>
+                `;
+            }
+            return `
+                <div class="equip-grid">
+                    ${items.map(item => `
+                        <div class="equip-card">
+                            <div class="equip-img-wrap">
+                                <span class="equip-badge badge-${item.grade}">${getGradeText(item.grade)}</span>
+                                <img src="${item.image}" alt="${item.name}" loading="lazy">
+                            </div>
+                            <div class="equip-info">
+                                <div class="equip-name">${item.name}</div>
+                                <div class="equip-meta">
+                                    <span>📍 ${item.server}</span>
+                                    <span>⚔️ ${item.job}</span>
+                                </div>
+                                <div class="equip-price">
+                                    <span class="price-tag">${item.price}</span>
+                                    <button class="contact-btn">联系购买</button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // 角色页面
+        function renderCharPage() {
+            if (data.characters.length === 0) {
+                return `
+                    <div class="empty-state">
+                        <div class="icon">🎭</div>
+                        <h3>暂无角色</h3>
+                        <p>点击右上角「添加角色」展示你的号</p>
+                    </div>
+                `;
+            }
+            return `
+                <div class="char-grid">
+                    ${data.characters.map(ch => `
+                        <div class="char-card">
+                            <img src="${ch.image || 'https://api.dicebear.com/7.x/avataaars/svg?seed='+ch.name}" class="char-avatar" alt="${ch.name}">
+                            <div class="char-name">${ch.name}</div>
+                            <div class="char-server">${ch.server} · ${ch.job}</div>
+                            <div class="char-stats">
+                                <div class="char-stat">
+                                    <div class="char-stat-value">${ch.power || '?'}</div>
+                                    <div class="char-stat-label">战力</div>
+                                </div>
+                                <div class="char-stat">
+                                    <div class="char-stat-value">${data.equipments.filter(e=>e.server===ch.server && e.job===ch.job).length}</div>
+                                    <div class="char-stat-label">装备</div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // 筛选
+        function filterServer(s) { currentServer = s; renderContent(); }
+        function filterJob(j) { currentJob = j; renderContent(); }
+        function filterCategory(c) { currentCategory = c; renderContent(); }
+
+        // 模态框
+        function openModal(type) {
+            document.getElementById('modal' + type.charAt(0).toUpperCase() + type.slice(1)).classList.add('active');
+        }
+        function closeModal(type) {
+            document.getElementById('modal' + type.charAt(0).toUpperCase() + type.slice(1)).classList.remove('active');
+            // 重置表单
+            if (type === 'equip') {
+                tempImage = null;
+                document.getElementById('previewImg').classList.remove('active');
+                document.getElementById('fileInput').value = '';
+                ['eqName','eqPrice','eqStats','eqNote'].forEach(id => document.getElementById(id).value = '');
+            }
+        }
+
+        // 文件处理
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                tempImage = ev.target.result;
+                document.getElementById('previewImg').src = tempImage;
+                document.getElementById('previewImg').classList.add('active');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleCharFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                document.getElementById('charPreview').src = ev.target.result;
+                document.getElementById('charPreview').classList.add('active');
+                document.getElementById('charPreview').dataset.image = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 拖拽上传
+        function setupDragDrop() {
+            const area = document.getElementById('uploadArea');
+            ['dragenter','dragover','dragleave','drop'].forEach(eventName => {
+                area.addEventListener(eventName, (e) => {
+                    e.preventDefault(); e.stopPropagation();
+                });
+            });
+            ['dragenter','dragover'].forEach(eventName => {
+                area.addEventListener(eventName, () => area.classList.add('dragover'));
+            });
+            ['dragleave','drop'].forEach(eventName => {
+                area.addEventListener(eventName, () => area.classList.remove('dragover'));
+            });
+            area.addEventListener('drop', (e) => {
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        tempImage = ev.target.result;
+                        document.getElementById('previewImg').src = tempImage;
+                        document.getElementById('previewImg').classList.add('active');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        // 保存装备
+        function saveEquipment() {
+            const name = document.getElementById('eqName').value.trim();
+            const server = document.getElementById('eqServer').value;
+            const job = document.getElementById('eqJob').value;
+            const category = document.getElementById('eqCategory').value;
+            
+            if (!name || !server || !job || !category) {
+                showToast('请填写必填项（名称、大区、职业、分类）');
+                return;
+            }
+
+            const equip = {
+                id: Date.now(),
+                name, server, job, category,
+                grade: document.getElementById('eqGrade').value,
+                price: document.getElementById('eqPrice').value.trim() || '面议',
+                stats: document.getElementById('eqStats').value.trim(),
+                note: document.getElementById('eqNote').value.trim(),
+                image: tempImage || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200"><rect fill="%23151520" width="300" height="200"/><text fill="%23ffd700" x="50%" y="50%" text-anchor="middle">暂无图片</text></svg>',
+                date: new Date().toLocaleDateString()
+            };
+
+            data.equipments.unshift(equip);
+            saveData();
+            closeModal('equip');
+            renderContent();
+            showToast('✅ 装备添加成功！');
+        }
+
+        // 保存攻略
+        function saveArticle() {
+            const title = document.getElementById('artTitle').value.trim();
+            if (!title) { showToast('请输入攻略标题'); return; }
+
+            data.articles.unshift({
+                id: Date.now(),
+                title,
+                job: document.getElementById('artJob').value,
+                type: document.getElementById('artType').value,
+                content: document.getElementById('artContent').value.trim(),
+                date: new Date().toLocaleDateString()
+            });
+
+            saveData();
+            closeModal('article');
+            renderContent();
+            showToast('✅ 攻略发布成功！');
+        }
+
+        // 保存角色
+        function saveCharacter() {
+            const name = document.getElementById('charName').value.trim();
+            if (!name) { showToast('请输入角色名'); return; }
+
+            data.characters.push({
+                id: Date.now(),
+                name,
+                server: document.getElementById('charServer').value,
+                job: document.getElementById('charJob').value,
+                power: document.getElementById('charPower').value.trim(),
+                image: document.getElementById('charPreview').dataset.image || null
+            });
+
+            saveData();
+            closeModal('char');
+            renderContent();
+            showToast('✅ 角色添加成功！');
+        }
+
+        // 数据持久化
+        function saveData() {
+            localStorage.setItem('ffo_data', JSON.stringify(data));
+        }
+
+        // 导出
+        function exportData() {
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ffo_backup_${new Date().toLocaleDateString()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('✅ 数据已导出');
+        }
+
+        // 导入
+        function importData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                try {
+                    const imported = JSON.parse(ev.target.result);
+                    if (imported.equipments && imported.articles && imported.characters) {
+                        data = imported;
+                        saveData();
+                        renderContent();
+                        showToast('✅ 数据导入成功！');
+                    } else {
+                        throw new Error('格式错误');
+                    }
+                } catch(err) {
+                    showToast('❌ 文件格式错误');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // 清空
+        function clearAllData() {
+            if (confirm('确定要清空所有数据吗？此操作不可恢复！')) {
+                data = { equipments: [], articles: [], characters: [] };
+                saveData();
+                renderContent();
+                showToast('🗑️ 数据已清空');
+            }
+        }
+
+        // 提示
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // 点击外部关闭
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) overlay.classList.remove('active');
+            });
+        });
+
+        // 键盘ESC关闭
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+            }
+        });
+    </script>
+</body>
+</html>
