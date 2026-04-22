@@ -58,7 +58,8 @@
 
         /* 管理按钮 */
         .admin-btns {
-            display: flex; gap: 0.8rem;
+            display: none; /* 默认隐藏 */
+            gap: 0.8rem;
         }
         .btn {
             padding: 0.6rem 1.2rem; border-radius: 8px; border: none;
@@ -391,7 +392,7 @@
                 <div class="logo-icon">⚔️</div>
                 <span>自由幻想 · 商人装备馆</span>
             </div>
-            <div class="admin-btns">
+            <div class="admin-btns" id="adminBtns">
                 <button class="btn btn-gold" onclick="openModal('equip')">
                     <span>➕</span> 添加装备
                 </button>
@@ -651,6 +652,11 @@
     <div class="toast" id="toast"></div>
 
     <script>
+        // ==============================================
+        // 管理员密码（你自己修改这里！）
+        const ADMIN_PASSWORD = "123456";
+        // ==============================================
+
         // 数据存储
         let data = JSON.parse(localStorage.getItem('ffo_data')) || {
             equipments: [],
@@ -663,14 +669,42 @@
         let currentJob = '全部';
         let currentCategory = '全部';
         let tempImage = null;
+        let isAdmin = false; // 默认不是管理员
 
         // 初始化
         document.addEventListener('DOMContentLoaded', () => {
             renderContent();
             setupDragDrop();
+            checkAdmin();
         });
 
-        // 切换主标签
+        // 检查是否已登录
+        function checkAdmin() {
+            if(localStorage.getItem('isAdmin') === 'true'){
+                isAdmin = true;
+                showAdminPanel();
+            }
+        }
+
+        // 显示管理员面板
+        function showAdminPanel() {
+            document.getElementById('adminBtns').style.display = 'flex';
+        }
+
+        // 登录验证（你自己用）
+        function loginAdmin(){
+            let pwd = prompt("请输入管理员密码：");
+            if(pwd === ADMIN_PASSWORD){
+                isAdmin = true;
+                localStorage.setItem('isAdmin', 'true');
+                showAdminPanel();
+                showToast("✅ 管理员登录成功");
+            }else{
+                showToast("❌ 密码错误");
+            }
+        }
+
+        // 切换主标签（游客也能看）
         function switchTab(tab, btn) {
             currentTab = tab;
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
@@ -729,7 +763,6 @@
                     <div class="empty-state">
                         <div class="icon">📦</div>
                         <h3>暂无装备</h3>
-                        <p>点击右上角「添加装备」开始录入</p>
                     </div>
                 `;
             } else {
@@ -750,7 +783,7 @@
                             ${item.note ? `<div style="font-size:0.8rem;color:var(--orange);margin-bottom:0.8rem;">💡 ${item.note}</div>` : ''}
                             <div class="equip-price">
                                 <span class="price-tag">${item.price || '面议'}</span>
-                                <button class="contact-btn" onclick="showToast('已复制联系方式到剪贴板')">联系购买</button>
+                                <button class="contact-btn" onclick="showToast('需要购买请联系商人')">联系购买</button>
                             </div>
                         </div>
                     </div>
@@ -772,7 +805,6 @@
                     <div class="empty-state">
                         <div class="icon">📖</div>
                         <h3>暂无攻略</h3>
-                        <p>点击右上角「写攻略」分享你的心得</p>
                     </div>
                 `;
             }
@@ -789,7 +821,7 @@
             `).join('');
         }
 
-        // 寄售页面（只显示有价格的装备）
+        // 寄售页面
         function renderOnsalePage() {
             let items = data.equipments.filter(i => i.price && i.price !== '面议');
             if (items.length === 0) {
@@ -797,7 +829,6 @@
                     <div class="empty-state">
                         <div class="icon">💎</div>
                         <h3>暂无寄售装备</h3>
-                        <p>添加装备时填写价格即可在此展示</p>
                     </div>
                 `;
             }
@@ -833,7 +864,6 @@
                     <div class="empty-state">
                         <div class="icon">🎭</div>
                         <h3>暂无角色</h3>
-                        <p>点击右上角「添加角色」展示你的号</p>
                     </div>
                 `;
             }
@@ -865,13 +895,16 @@
         function filterJob(j) { currentJob = j; renderContent(); }
         function filterCategory(c) { currentCategory = c; renderContent(); }
 
-        // 模态框
+        // 模态框（必须管理员才能打开）
         function openModal(type) {
+            if(!isAdmin){
+                loginAdmin();
+                return;
+            }
             document.getElementById('modal' + type.charAt(0).toUpperCase() + type.slice(1)).classList.add('active');
         }
         function closeModal(type) {
             document.getElementById('modal' + type.charAt(0).toUpperCase() + type.slice(1)).classList.remove('active');
-            // 重置表单
             if (type === 'equip') {
                 tempImage = null;
                 document.getElementById('previewImg').classList.remove('active');
@@ -933,8 +966,9 @@
             });
         }
 
-        // 保存装备
+        // 保存装备（管理员权限）
         function saveEquipment() {
+            if(!isAdmin) return;
             const name = document.getElementById('eqName').value.trim();
             const server = document.getElementById('eqServer').value;
             const job = document.getElementById('eqJob').value;
@@ -965,6 +999,7 @@
 
         // 保存攻略
         function saveArticle() {
+            if(!isAdmin) return;
             const title = document.getElementById('artTitle').value.trim();
             if (!title) { showToast('请输入攻略标题'); return; }
 
@@ -985,6 +1020,7 @@
 
         // 保存角色
         function saveCharacter() {
+            if(!isAdmin) return;
             const name = document.getElementById('charName').value.trim();
             if (!name) { showToast('请输入角色名'); return; }
 
@@ -1010,6 +1046,7 @@
 
         // 导出
         function exportData() {
+            if(!isAdmin) return;
             const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1022,6 +1059,7 @@
 
         // 导入
         function importData(e) {
+            if(!isAdmin) return;
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
@@ -1045,6 +1083,7 @@
 
         // 清空
         function clearAllData() {
+            if(!isAdmin) return;
             if (confirm('确定要清空所有数据吗？此操作不可恢复！')) {
                 data = { equipments: [], articles: [], characters: [] };
                 saveData();
