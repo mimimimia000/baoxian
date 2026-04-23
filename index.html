@@ -532,6 +532,19 @@
                         </select>
                     </div>
                 </div>
+
+                <!-- 修复：添加缺失的分类选择框 -->
+                <div class="form-group">
+                    <label class="form-label">装备分类 *</label>
+                    <select class="form-select" id="eqCategory">
+                        <option value="基础装备">基础装备</option>
+                        <option value="攻血套">攻血套</option>
+                        <option value="宠物">宠物</option>
+                        <option value="徽章">徽章</option>
+                        <option value="杂货">杂货</option>
+                    </select>
+                </div>
+
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">品质</label>
@@ -971,7 +984,7 @@
             const category=document.getElementById('eqCategory').value;
             const image=document.getElementById('eqImage').value.trim();
             const charId=document.getElementById('eqChar').value;
-            if(!name||!server||!job||!category||!image){showToast('带 * 号为必填项');return;}
+            if(!name||!server||!job||!image){showToast('带 * 号为必填项');return;}
             
             const equip={
                 id:Date.now(),name,server,job,category,
