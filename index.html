@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>自由幻想 · 金商保险装备馆</title>
+    <title>自由幻想 · 白苏苏装备馆</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -54,8 +54,25 @@
             font-size: 1.3rem; -webkit-text-fill-color: initial;
         }
 
+        .service-btn {
+            padding: 0.7rem 1.4rem;
+            background: linear-gradient(135deg, #ff6b9d, #c44569);
+            color: #fff;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        .service-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(255,107,157,0.4);
+        }
+
         .admin-btns {
-            display: none; /* 默认隐藏，登录才显示 */
+            display: none;
             gap: 0.8rem;
         }
         .btn {
@@ -136,6 +153,7 @@
             background: var(--card); border: 1px solid var(--border);
             border-radius: 16px; overflow: hidden;
             transition: all 0.3s; position: relative;
+            cursor: pointer;
         }
         .equip-card:hover {
             transform: translateY(-5px);
@@ -310,6 +328,7 @@
             background: var(--card); border: 1px solid var(--border);
             border-radius: 16px; overflow: hidden; text-align: center;
             transition: all 0.3s;
+            cursor: pointer;
         }
         .char-card:hover {
             border-color: rgba(255,215,0,0.3);
@@ -366,7 +385,6 @@
         }
         .batch-bar.active { display: flex; }
 
-        /* 登录弹窗样式 */
         .login-modal {
             position: fixed; inset: 0; background: rgba(0,0,0,0.9);
             z-index: 2000; display: none; align-items: center; justify-content: center;
@@ -387,11 +405,67 @@
             width: 100%; padding: 0.8rem; background: linear-gradient(135deg, var(--gold), var(--gold-dark));
             color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
         }
+
+        /* 装备大图查看弹窗 */
+        .preview-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .preview-modal.active {
+            display: flex;
+        }
+        .preview-content {
+            max-width: 90%;
+            max-height: 90vh;
+            border-radius: 12px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.7);
+        }
+        .preview-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .preview-close:hover {
+            background: rgba(255,215,0,0.3);
+        }
+        .preview-info {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-align: center;
+            max-width: 80%;
+        }
     </style>
 </head>
 <body>
     <div class="bg"></div><div class="stars"></div>
-    <!-- 登录弹窗 -->
+
+    <!-- 大图预览弹窗 -->
+    <div class="preview-modal" id="previewModal">
+        <button class="preview-close" onclick="closePreview()">×</button>
+        <img src="" id="previewImage" class="preview-content">
+        <div class="preview-info" id="previewInfo"></div>
+    </div>
+
     <div class="login-modal" id="loginModal">
         <div class="login-box">
             <div class="login-title">管理员登录</div>
@@ -404,21 +478,17 @@
         <div class="header-inner">
             <div class="logo">
                 <div class="logo-icon">⚔️</div>
-                <span>自由幻想 · 商人装备馆</span>
+                <span>自由幻想 · 白苏苏装备馆</span>
             </div>
-            <div class="admin-btns" id="adminBtns">
-                <button class="btn btn-gold" onclick="openModal('equip')">
-                    <span>➕</span> 添加装备
-                </button>
-                <button class="btn btn-outline" onclick="openModal('article')">
-                    <span>📝</span> 写攻略
-                </button>
-                <button class="btn btn-outline" onclick="openModal('char')">
-                    <span>👤</span> 添加角色
-                </button>
-                <button class="btn btn-outline" onclick="openModal('data')">
-                    <span>⚙️</span> 数据管理
-                </button>
+
+            <div style="display:flex;gap:12px;align-items:center;">
+                <button class="service-btn" onclick="showService()">咨询价格请联系客服</button>
+                <div class="admin-btns" id="adminBtns">
+                    <button class="btn btn-gold" onclick="openModal('equip')">➕ 添加装备</button>
+                    <button class="btn btn-outline" onclick="openModal('article')">📝 写攻略</button>
+                    <button class="btn btn-outline" onclick="openModal('char')">👤 添加角色</button>
+                    <button class="btn btn-outline" onclick="openModal('data')">⚙️ 数据管理</button>
+                </div>
             </div>
         </div>
         <div class="main-nav" id="mainNav">
@@ -664,38 +734,50 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        // 核心：权限控制（默认游客，登录才显示管理按钮）
-        const ADMIN_PASSWORD = "00101699"; // 你的管理密码，可修改
+        const ADMIN_PASSWORD = "123456";
         let isAdmin = false;
         let data = JSON.parse(localStorage.getItem('ffo_data')) || { equipments: [], articles: [], characters: [] };
         let currentTab = 'equip', currentServer = '全部', currentJob = '全部', currentCategory = '全部';
         let tempImage = null;
 
-        // 初始化：双击页面弹出登录（游客看不到按钮）
         document.addEventListener('DOMContentLoaded', () => {
             renderContent();
             setupDragDrop();
-            // 双击页面触发登录
             document.body.addEventListener('dblclick', () => {
                 if(!isAdmin) document.getElementById('loginModal').classList.add('active');
             });
             updateDataStats();
         });
 
-        // 登录验证
+        // 客服微信弹窗
+        function showService() {
+            alert("咨询价格请联系客服微信：17779195579");
+        }
+
+        // 打开大图预览
+        function openPreview(imgSrc, info) {
+            document.getElementById('previewImage').src = imgSrc;
+            document.getElementById('previewInfo').innerHTML = info;
+            document.getElementById('previewModal').classList.add('active');
+        }
+
+        // 关闭大图预览
+        function closePreview() {
+            document.getElementById('previewModal').classList.remove('active');
+        }
+
         function checkLogin() {
             const pwd = document.getElementById('adminPwd').value.trim();
             if(pwd === ADMIN_PASSWORD) {
                 isAdmin = true;
                 document.getElementById('loginModal').classList.remove('active');
-                document.getElementById('adminBtns').style.display = 'flex'; // 显示管理按钮
+                document.getElementById('adminBtns').style.display = 'flex';
                 showToast('✅ 管理员登录成功！');
             } else {
                 showToast('❌ 密码错误，请重试');
             }
         }
 
-        // 切换标签
         function switchTab(tab, btn) {
             currentTab = tab;
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
@@ -703,7 +785,6 @@
             renderContent();
         }
 
-        // 渲染内容（游客只能看，不能改）
         function renderContent() {
             const container = document.getElementById('mainContainer');
             switch(currentTab) {
@@ -727,7 +808,7 @@
                     <span class="sub-label">职业：</span>
                     ${jobs.map(j => `<button class="chip ${currentJob===j?'active':''}" onclick="filterJob('${j}')">${j}</button>`).join('')}
                 </div>
-                <div class="category-nav">
+                <div class="sub-nav">
                     <span class="sub-label">分类：</span>
                     ${categories.map(c => `<button class="chip ${currentCategory===c?'active':''}" onclick="filterCategory('${c}')">${c}</button>`).join('')}
                 </div>
@@ -737,26 +818,23 @@
             if (currentJob !== '全部') items = items.filter(i => i.job === currentJob);
             if (currentCategory !== '全部') items = items.filter(i => i.category === currentCategory);
             if (items.length === 0) {
-                html += `<div class="empty-state"><div class="icon">📦</div><h3>暂无装备</h3><p>管理员正在添加中</p></div>`;
+                html += `<div class="empty-state"><div class="icon">📦</div><h3>暂无装备</h3><p>点击图片可查看大图</p></div>`;
             } else {
-                html += '<div class="equip-grid">' + items.map(item => `
-                    <div class="equip-card">
+                html += '<div class="equip-grid">' + items.map((item, index) => `
+                    <div class="equip-card" onclick="openPreview('${item.image}', '${item.name}<br>${item.server} | ${item.job} | ${item.price}')">
                         <div class="equip-img-wrap">
                             <span class="equip-badge badge-${item.grade}">${getGradeText(item.grade)}</span>
-                            <img src="${item.image}" alt="${item.name}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22200%22><rect fill=%22%23151520%22 width=%22300%22 height=%22200%22/><text fill=%22%23ffd700%22 x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22>暂无图片</text></svg>'">
+                            <img src="${item.image}" alt="${item.name}" loading="lazy">
                         </div>
                         <div class="equip-info">
                             <div class="equip-name">${item.name}</div>
                             <div class="equip-meta">
                                 <span>📍 ${item.server}</span>
                                 <span>⚔️ ${item.job}</span>
-                                <span>📂 ${item.category}</span>
                             </div>
-                            ${item.stats ? `<div style="font-size:0.85rem;color:rgba(255,255,255,0.6);margin-bottom:0.8rem;line-height:1.6;">${item.stats.replace(/\n/g,'<br>')}</div>` : ''}
-                            ${item.note ? `<div style="font-size:0.8rem;color:var(--orange);margin-bottom:0.8rem;">💡 ${item.note}</div>` : ''}
                             <div class="equip-price">
                                 <span class="price-tag">${item.price || '面议'}</span>
-                                <button class="contact-btn" onclick="showToast('联系商人：mimimimia000')">联系购买</button>
+                                <button class="contact-btn" onclick="event.stopPropagation(); showService()">联系购买</button>
                             </div>
                         </div>
                     </div>
@@ -775,7 +853,7 @@
             return data.articles.map(art=>`
                 <div class="article-card">
                     <div class="article-title">${art.title}</div>
-                    <div class="article-meta"><span>⚔️ ${art.job}</span><span>📌 ${art.type}</span><span>📅 ${art.date}</span></div>
+                    <div class="article-meta"><span>⚔️ ${art.job}</span><span>📌 ${art.type}</span></div>
                     <div class="article-excerpt">${art.content.substring(0,200)}${art.content.length>200?'...':''}</div>
                 </div>
             `).join('');
@@ -785,17 +863,16 @@
             let items=data.equipments.filter(i=>i.price&&i.price!=='面议');
             if(items.length===0) return `<div class="empty-state"><div class="icon">💎</div><h3>暂无寄售装备</h3></div>`;
             return `<div class="equip-grid">${items.map(item=>`
-                <div class="equip-card">
+                <div class="equip-card" onclick="openPreview('${item.image}', '${item.name}<br>${item.server} | ${item.job} | ${item.price}')">
                     <div class="equip-img-wrap">
                         <span class="equip-badge badge-${item.grade}">${getGradeText(item.grade)}</span>
-                        <img src="${item.image}" alt="${item.name}" loading="lazy">
+                        <img src="${item.image}" alt="${item.name}">
                     </div>
                     <div class="equip-info">
                         <div class="equip-name">${item.name}</div>
-                        <div class="equip-meta"><span>📍 ${item.server}</span><span>⚔️ ${item.job}</span></div>
                         <div class="equip-price">
                             <span class="price-tag">${item.price}</span>
-                            <button class="contact-btn">联系购买</button>
+                            <button class="contact-btn" onclick="showService()">联系购买</button>
                         </div>
                     </div>
                 </div>
@@ -805,13 +882,12 @@
         function renderCharPage() {
             if(data.characters.length===0) return `<div class="empty-state"><div class="icon">🎭</div><h3>暂无角色</h3></div>`;
             return `<div class="char-grid">${data.characters.map(ch=>`
-                <div class="char-card">
+                <div class="char-card" onclick="openPreview('${ch.image || 'https://api.dicebear.com/7.x/avataaars/svg?seed='+ch.name}', '${ch.name}<br>${ch.server} | ${ch.job} | 战力：${ch.power || '?'}')">
                     <img src="${ch.image||'https://api.dicebear.com/7.x/avataaars/svg?seed='+ch.name}" class="char-avatar" alt="${ch.name}">
                     <div class="char-name">${ch.name}</div>
                     <div class="char-server">${ch.server} · ${ch.job}</div>
                     <div class="char-stats">
                         <div class="char-stat"><div class="char-stat-value">${ch.power||'?'}</div><div class="char-stat-label">战力</div></div>
-                        <div class="char-stat"><div class="char-stat-value">${data.equipments.filter(e=>e.server===ch.server&&e.job===ch.job).length}</div><div class="char-stat-label">装备</div></div>
                     </div>
                 </div>
             `).join('')}</div>`;
@@ -821,7 +897,6 @@
         function filterJob(j){currentJob=j;renderContent();}
         function filterCategory(c){currentCategory=c;renderContent();}
 
-        // 模态框控制（仅管理员可用）
         function openModal(type){
             if(!isAdmin){showToast('❌ 仅管理员可操作');return;}
             document.getElementById('modal'+type.charAt(0).toUpperCase()+type.slice(1)).classList.add('active');
@@ -846,37 +921,6 @@
             const area=document.getElementById('uploadArea');['dragenter','dragover','dragleave','drop'].forEach(eventName=>{area.addEventListener(eventName,(e)=>{e.preventDefault();e.stopPropagation();});});['dragenter','dragover'].forEach(eventName=>{area.addEventListener(eventName,()=>area.classList.add('dragover'));});['dragleave','drop'].forEach(eventName=>{area.addEventListener(eventName,()=>area.classList.remove('dragover'));});area.addEventListener('drop',(e)=>{if(!isAdmin)return;const file=e.dataTransfer.files[0];if(file&&file.type.startsWith('image/')){const reader=new FileReader();reader.onload=(ev)=>{tempImage=ev.target.result;document.getElementById('previewImg').src=tempImage;document.getElementById('previewImg').classList.add('active');};reader.readAsDataURL(file);}});
         }
 
-        // 保存操作（仅管理员）
         function saveEquipment(){
             if(!isAdmin){showToast('❌ 无权限');return;}
-            const name=document.getElementById('eqName').value.trim();const server=document.getElementById('eqServer').value;const job=document.getElementById('eqJob').value;const category=document.getElementById('eqCategory').value;
-            if(!name||!server||!job||!category){showToast('请填写必填项');return;}
-            const equip={id:Date.now(),name,server,job,category,grade:document.getElementById('eqGrade').value,price:document.getElementById('eqPrice').value.trim()||'面议',stats:document.getElementById('eqStats').value.trim(),note:document.getElementById('eqNote').value.trim(),image:tempImage||'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200"><rect fill="%23151520" width="300" height="200"/><text fill="%23ffd700" x="50%" y="50%" text-anchor="middle">暂无图片</text></svg>',date:new Date().toLocaleDateString()};
-            data.equipments.unshift(equip);saveData();closeModal('equip');renderContent();showToast('✅ 装备添加成功！');
-        }
-        function saveArticle(){
-            if(!isAdmin){showToast('❌ 无权限');return;}
-            const title=document.getElementById('artTitle').value.trim();if(!title){showToast('请输入标题');return;}
-            data.articles.unshift({id:Date.now(),title,job:document.getElementById('artJob').value,type:document.getElementById('artType').value,content:document.getElementById('artContent').value.trim(),date:new Date().toLocaleDateString()});
-            saveData();closeModal('article');renderContent();showToast('✅ 攻略发布成功！');
-        }
-        function saveCharacter(){
-            if(!isAdmin){showToast('❌ 无权限');return;}
-            const name=document.getElementById('charName').value.trim();if(!name){showToast('请输入角色名');return;}
-            data.characters.push({id:Date.now(),name,server:document.getElementById('charServer').value,job:document.getElementById('charJob').value,power:document.getElementById('charPower').value.trim(),image:document.getElementById('charPreview').dataset.image||null});
-            saveData();closeModal('char');renderContent();showToast('✅ 角色添加成功！');
-        }
-
-        function saveData(){localStorage.setItem('ffo_data',JSON.stringify(data));updateDataStats();}
-        function updateDataStats(){document.getElementById('dataStats').textContent=`装备：${data.equipments.length} | 攻略：${data.articles.length} | 角色：${data.characters.length}`;}
-        function exportData(){if(!isAdmin)return;const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`ffo_backup_${new Date().toLocaleDateString()}.json`;a.click();URL.revokeObjectURL(url);showToast('✅ 数据已导出');}
-        function importData(e){if(!isAdmin)return;const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=(ev)=>{try{const imported=JSON.parse(ev.target.result);if(imported.equipments&&imported.articles&&imported.characters){data=imported;saveData();renderContent();showToast('✅ 数据导入成功！');}else throw new Error('格式错误');}catch(err){showToast('❌ 文件格式错误');}};reader.readAsText(file);}
-        function clearAllData(){if(!isAdmin)return;if(confirm('确定清空所有数据？不可恢复！')){data={equipments:[],articles:[],characters:[]};saveData();renderContent();showToast('🗑️ 数据已清空');}}
-        function showToast(msg){const toast=document.getElementById('toast');toast.textContent=msg;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),3000);}
-
-        // 点击外部/ESC关闭弹窗
-        document.querySelectorAll('.modal-overlay').forEach(overlay=>{overlay.addEventListener('click',(e)=>{if(e.target===overlay)overlay.classList.remove('active');});});
-        document.addEventListener('keydown',(e)=>{if(e.key==='Escape'){document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('active'));document.getElementById('loginModal').classList.remove('active');}});
-    </script>
-</body>
-</html>
+            const name=document.getElementById('eq
