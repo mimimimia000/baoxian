@@ -209,6 +209,13 @@
         .contact-btn:hover {
             background: var(--gold); color: #000;
         }
+        .delete-btn {
+            position: absolute; top: 1rem; left: 1rem;
+            background: rgba(239,68,68,0.8); color: #fff;
+            border: none; border-radius: 6px; padding: 0.3rem 0.6rem;
+            font-size: 0.8rem; cursor: pointer; display: none;
+        }
+        .delete-btn:hover { background: var(--red); }
 
         .empty-state {
             text-align: center; padding: 4rem 2rem; color: rgba(255,255,255,0.3);
@@ -261,18 +268,6 @@
         .form-select option { background: var(--card); color: #fff; }
         .form-textarea { min-height: 80px; resize: vertical; }
 
-        .upload-area {
-            border: 2px dashed rgba(255,215,0,0.3);
-            border-radius: 12px; padding: 2rem;
-            text-align: center; cursor: pointer;
-            transition: all 0.3s; position: relative;
-            background: rgba(255,215,0,0.02);
-            display: none;
-        }
-        .upload-area:hover, .upload-area.dragover {
-            border-color: var(--gold); background: rgba(255,215,0,0.05);
-        }
-
         .form-row {
             display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
         }
@@ -314,7 +309,7 @@
             background: var(--card); border: 1px solid var(--border);
             border-radius: 16px; overflow: hidden; text-align: center;
             transition: all 0.3s;
-            cursor: pointer;
+            cursor: pointer; position: relative;
         }
         .char-card:hover {
             border-color: rgba(255,215,0,0.3);
@@ -334,6 +329,20 @@
         .char-stat { text-align: center; }
         .char-stat-value { font-size: 1.3rem; color: var(--gold); font-weight: bold; }
         .char-stat-label { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 0.2rem; }
+
+        .char-detail-header {
+            display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;
+        }
+        .back-btn {
+            background: transparent; border: 1px solid var(--border); color: #fff;
+            padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer;
+            transition: all 0.3s;
+        }
+        .back-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+        .char-equip-title {
+            font-size: 1.2rem; color: var(--gold); margin-bottom: 1rem;
+        }
 
         .data-actions {
             background: var(--card); border: 1px solid var(--border);
@@ -484,10 +493,7 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label class="form-label">👉 装备图片地址（必填）</label>
-                    <input type="text" class="form-input" id="eqImage" placeholder="粘贴图片外链，https://开头">
-                    <div style="color:#aaa;font-size:12px;margin-top:5px;">
-                        上传图片到 imgchr.com → 复制【外链】粘贴进来
-                    </div>
+                    <input type="text" class="form-input" id="eqImage" placeholder="粘贴图片外链，https://开头，结尾带.png/.jpg">
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -517,14 +523,9 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">装备分类 *</label>
-                        <select class="form-select" id="eqCategory">
-                            <option value="">请选择分类</option>
-                            <option value="宠物">🐾 宠物</option>
-                            <option value="攻血套">❤️ 攻血套</option>
-                            <option value="徽章">🏅 徽章</option>
-                            <option value="基础装备">🛡️ 基础装备</option>
-                            <option value="杂货">📦 杂货</option>
+                        <label class="form-label">所属角色</label>
+                        <select class="form-select" id="eqChar">
+                            <option value="">无（通用装备）</option>
                         </select>
                     </div>
                 </div>
@@ -702,6 +703,7 @@
         let isAdmin = false;
         let data = JSON.parse(localStorage.getItem('ffo_data')) || { equipments: [], articles: [], characters: [] };
         let currentTab = 'equip', currentServer = '全部', currentJob = '全部', currentCategory = '全部';
+        let selectedCharId = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             renderContent();
@@ -731,6 +733,8 @@
                 isAdmin = true;
                 document.getElementById('loginModal').classList.remove('active');
                 document.getElementById('adminBtns').style.display = 'flex';
+                // 登录后显示删除按钮
+                document.querySelectorAll('.delete-btn').forEach(btn => btn.style.display = 'block');
                 showToast('✅ 管理员登录成功！');
             } else {
                 showToast('❌ 密码错误，请重试');
@@ -742,6 +746,7 @@
             currentTab = tab;
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             btn.classList.add('active');
+            selectedCharId = null;
             renderContent();
         }
 
@@ -752,7 +757,17 @@
                 case 'equip': container.innerHTML = renderEquipPage(); break;
                 case 'article': container.innerHTML = renderArticlePage(); break;
                 case 'onsale': container.innerHTML = renderOnsalePage(); break;
-                case 'char': container.innerHTML = renderCharPage(); break;
+                case 'char': 
+                    if(selectedCharId) {
+                        container.innerHTML = renderCharDetailPage();
+                    } else {
+                        container.innerHTML = renderCharListPage();
+                    }
+                    break;
+            }
+            // 管理员登录后显示删除按钮
+            if(isAdmin) {
+                document.querySelectorAll('.delete-btn').forEach(btn => btn.style.display = 'block');
             }
         }
 
@@ -783,6 +798,7 @@
             } else {
                 html += '<div class="equip-grid">' + items.map((item) => `
                     <div class="equip-card" onclick="openPreview('${item.image}', '${item.name}<br>${item.server} | ${item.job} | ${item.price}')">
+                        <button class="delete-btn" style="display:none" onclick="event.stopPropagation(); deleteEquip(${item.id})">删除</button>
                         <div class="equip-img-wrap">
                             <span class="equip-badge badge-${item.grade}">${getGradeText(item.grade)}</span>
                             <img src="${item.image}" alt="${item.name}">
@@ -825,6 +841,7 @@
             if(items.length===0) return `<div class="empty-state"><div class="icon">💎</div><h3>暂无寄售装备</h3></div>`;
             return `<div class="equip-grid">${items.map(item=>`
                 <div class="equip-card" onclick="openPreview('${item.image}', '${item.name}<br>${item.server} | ${item.job} | ${item.price}')">
+                    <button class="delete-btn" style="display:none" onclick="event.stopPropagation(); deleteEquip(${item.id})">删除</button>
                     <div class="equip-img-wrap">
                         <span class="equip-badge badge-${item.grade}">${getGradeText(item.grade)}</span>
                         <img src="${item.image}" alt="${item.name}">
@@ -833,17 +850,18 @@
                         <div class="equip-name">${item.name}</div>
                         <div class="equip-price">
                             <span class="price-tag">${item.price}</span>
-                            <button class="contact-btn" onclick="showService()">联系购买</button>
+                            <button class="contact-btn" onclick="event.stopPropagation(); showService()">联系购买</button>
                         </div>
                     </div>
                 </div>
             `).join('')}</div>`;
         }
 
-        function renderCharPage() {
+        function renderCharListPage() {
             if(data.characters.length===0) return `<div class="empty-state"><div class="icon">🎭</div><h3>暂无角色</h3></div>`;
             return `<div class="char-grid">${data.characters.map(ch=>`
-                <div class="char-card" onclick="openPreview('${ch.image}', '${ch.name}<br>${ch.server} | ${ch.job} | 战力：${ch.power || '?'}')">
+                <div class="char-card" onclick="openCharDetail(${ch.id})">
+                    <button class="delete-btn" style="display:none" onclick="event.stopPropagation(); deleteChar(${ch.id})">删除</button>
                     <img src="${ch.image}" class="char-avatar" alt="${ch.name}">
                     <div class="char-name">${ch.name}</div>
                     <div class="char-server">${ch.server} · ${ch.job}</div>
@@ -854,6 +872,58 @@
             `).join('')}</div>`;
         }
 
+        function renderCharDetailPage() {
+            const char = data.characters.find(c => c.id === selectedCharId);
+            if(!char) return renderCharListPage();
+            const charEquips = data.equipments.filter(e => e.charId === char.id);
+            let equipHtml = '';
+            if(charEquips.length === 0) {
+                equipHtml = `<div class="empty-state" style="padding:2rem 0;"><div class="icon">📦</div><h3>该角色暂无绑定装备</h3></div>`;
+            } else {
+                equipHtml = `<div class="equip-grid">${charEquips.map(item => `
+                    <div class="equip-card" onclick="openPreview('${item.image}', '${item.name}<br>${item.server} | ${item.job} | ${item.price}')">
+                        <div class="equip-img-wrap">
+                            <span class="equip-badge badge-${item.grade}">${getGradeText(item.grade)}</span>
+                            <img src="${item.image}" alt="${item.name}">
+                        </div>
+                        <div class="equip-info">
+                            <div class="equip-name">${item.name}</div>
+                            <div class="equip-meta">
+                                <span>📍 ${item.server}</span>
+                                <span>⚔️ ${item.job}</span>
+                            </div>
+                            <div class="equip-price">
+                                <span class="price-tag">${item.price || '面议'}</span>
+                                <button class="contact-btn" onclick="event.stopPropagation(); showService()">联系购买</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}</div>`;
+            }
+
+            return `
+                <div class="char-detail-header">
+                    <button class="back-btn" onclick="backToCharList()">← 返回角色列表</button>
+                    <div>
+                        <h2>${char.name}</h2>
+                        <p style="color:#aaa;">${char.server} · ${char.job} · 战力 ${char.power || '?'}</p>
+                    </div>
+                </div>
+                <div class="char-equip-title">角色身上的装备：</div>
+                ${equipHtml}
+            `;
+        }
+
+        function openCharDetail(charId) {
+            selectedCharId = charId;
+            renderContent();
+        }
+
+        function backToCharList() {
+            selectedCharId = null;
+            renderContent();
+        }
+
         function filterServer(s){currentServer=s;renderContent();}
         function filterJob(j){currentJob=j;renderContent();}
         function filterCategory(c){currentCategory=c;renderContent();}
@@ -861,9 +931,33 @@
         function openModal(type){
             if(!isAdmin){showToast('❌ 仅管理员可操作');return;}
             document.getElementById('modal'+type.charAt(0).toUpperCase()+type.slice(1)).classList.add('active');
+            // 打开装备添加弹窗时，更新角色列表
+            if(type === 'equip') {
+                const charSelect = document.getElementById('eqChar');
+                charSelect.innerHTML = '<option value="">无（通用装备）</option>';
+                data.characters.forEach(ch => {
+                    charSelect.innerHTML += `<option value="${ch.id}">${ch.name}</option>`;
+                });
+            }
         }
         function closeModal(type){
             document.getElementById('modal'+type.charAt(0).toUpperCase()+type.slice(1)).classList.remove('active');
+        }
+
+        function deleteEquip(id) {
+            if(!confirm('确定要删除这个装备吗？')) return;
+            data.equipments = data.equipments.filter(e => e.id !== id);
+            saveData();
+            renderContent();
+            showToast('✅ 装备已删除');
+        }
+
+        function deleteChar(id) {
+            if(!confirm('确定要删除这个角色吗？角色身上的装备不会被删除')) return;
+            data.characters = data.characters.filter(c => c.id !== id);
+            saveData();
+            renderContent();
+            showToast('✅ 角色已删除');
         }
 
         function saveEquipment(){
@@ -873,6 +967,7 @@
             const job=document.getElementById('eqJob').value;
             const category=document.getElementById('eqCategory').value;
             const image=document.getElementById('eqImage').value.trim();
+            const charId=document.getElementById('eqChar').value;
             if(!name||!server||!job||!category||!image){showToast('带 * 号为必填项');return;}
             
             const equip={
@@ -882,13 +977,14 @@
                 stats:document.getElementById('eqStats').value.trim(),
                 note:document.getElementById('eqNote').value.trim(),
                 image:image,
+                charId: charId ? parseInt(charId) : null,
                 date:new Date().toLocaleDateString()
             };
             data.equipments.unshift(equip);
             saveData();
             closeModal('equip');
             renderContent();
-            showToast('✅ 装备添加成功！全世界都能看到啦！');
+            showToast('✅ 装备添加成功！');
         }
 
         function saveArticle(){
