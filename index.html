@@ -445,7 +445,7 @@
 
     <div class="preview-modal" id="previewModal">
         <button class="preview-close" onclick="closePreview()">×</button>
-        <img src="" id="previewImage" class="preview-content">
+        <img src="" id="previewImage" class="preview-content" crossorigin="anonymous">
         <div class="preview-info" id="previewInfo"></div>
     </div>
 
@@ -492,10 +492,10 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label class="form-label">👉 装备图片地址（必填）</label>
-                    <input type="text" class="form-input" id="eqImage" placeholder="可填写网络图片链接 https://">
+                    <label class="form-label">👉 装备图片地址（可填网络https链接）</label>
+                    <input type="text" class="form-input" id="eqImage" placeholder="粘贴GitHub图片直链/任意图片链接">
                     <div style="color:#aaa;font-size:12px;margin-top:5px;">
-                        把图片放进项目里的images文件夹，路径格式为：images/你的图片名.jpg
+                        支持全网图片链接，复制GitHub完整图片网址粘贴即可
                     </div>
                 </div>
                 <div class="form-row">
@@ -533,7 +533,6 @@
                     </div>
                 </div>
 
-                <!-- 修复：添加缺失的分类选择框 -->
                 <div class="form-group">
                     <label class="form-label">装备分类 *</label>
                     <select class="form-select" id="eqCategory">
@@ -630,11 +629,8 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label class="form-label">角色图片地址</label>
-                    <input type="text" class="form-input" id="charImage" placeholder="可填写网络图片链接 https://">
-                    <div style="color:#aaa;font-size:12px;margin-top:5px;">
-                        格式：images/你的角色图片名.jpg
-                    </div>
+                    <label class="form-label">角色图片地址（可填网络https链接）</label>
+                    <input type="text" class="form-input" id="charImage" placeholder="粘贴图片https链接">
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -818,7 +814,7 @@
                         <button class="delete-btn" style="display:none" onclick="event.stopPropagation(); deleteEquip(${item.id})">删除</button>
                         <div class="equip-img-wrap">
                             <span class="equip-badge badge-${item.grade}">${getGradeText(item.grade)}</span>
-                            <img src="${item.image}" alt="${item.name}">
+                            <img src="${item.image}" alt="${item.name}" crossorigin="anonymous">
                         </div>
                         <div class="equip-info">
                             <div class="equip-name">${item.name}</div>
@@ -861,7 +857,7 @@
                     <button class="delete-btn" style="display:none" onclick="event.stopPropagation(); deleteEquip(${item.id})">删除</button>
                     <div class="equip-img-wrap">
                         <span class="equip-badge badge-${item.grade}">${getGradeText(item.grade)}</span>
-                        <img src="${item.image}" alt="${item.name}">
+                        <img src="${item.image}" alt="${item.name}" crossorigin="anonymous">
                     </div>
                     <div class="equip-info">
                         <div class="equip-name">${item.name}</div>
@@ -879,7 +875,7 @@
             return `<div class="char-grid">${data.characters.map(ch=>`
                 <div class="char-card" onclick="openCharDetail(${ch.id})">
                     <button class="delete-btn" style="display:none" onclick="event.stopPropagation(); deleteChar(${ch.id})">删除</button>
-                    <img src="${ch.image}" class="char-avatar" alt="${ch.name}">
+                    <img src="${ch.image}" class="char-avatar" alt="${ch.name}" crossorigin="anonymous">
                     <div class="char-name">${ch.name}</div>
                     <div class="char-server">${ch.server} · ${ch.job}</div>
                     <div class="char-stats">
@@ -901,7 +897,7 @@
                     <div class="equip-card" onclick="openPreview('${item.image}', '${item.name}<br>${item.server} | ${item.job} | ${item.price}')">
                         <div class="equip-img-wrap">
                             <span class="equip-badge badge-${item.grade}">${getGradeText(item.grade)}</span>
-                            <img src="${item.image}" alt="${item.name}">
+                            <img src="${item.image}" alt="${item.name}" crossorigin="anonymous">
                         </div>
                         <div class="equip-info">
                             <div class="equip-name">${item.name}</div>
@@ -958,82 +954,3 @@
         }
         function closeModal(type){
             document.getElementById('modal'+type.charAt(0).toUpperCase()+type.slice(1)).classList.remove('active');
-        }
-
-        function deleteEquip(id) {
-            if(!confirm('确定要删除这个装备吗？')) return;
-            data.equipments = data.equipments.filter(e => e.id !== id);
-            saveData();
-            renderContent();
-            showToast('✅ 装备已删除');
-        }
-
-        function deleteChar(id) {
-            if(!confirm('确定要删除这个角色吗？角色身上的装备不会被删除')) return;
-            data.characters = data.characters.filter(c => c.id !== id);
-            saveData();
-            renderContent();
-            showToast('✅ 角色已删除');
-        }
-
-        function saveEquipment(){
-            if(!isAdmin){showToast('❌ 无权限');return;}
-            const name=document.getElementById('eqName').value.trim();
-            const server=document.getElementById('eqServer').value;
-            const job=document.getElementById('eqJob').value;
-            const category=document.getElementById('eqCategory').value;
-            const image=document.getElementById('eqImage').value.trim();
-            const charId=document.getElementById('eqChar').value;
-            if(!name||!server||!job||!image){showToast('带 * 号为必填项');return;}
-            
-            const equip={
-                id:Date.now(),name,server,job,category,
-                grade:document.getElementById('eqGrade').value,
-                price:document.getElementById('eqPrice').value.trim()||'面议',
-                stats:document.getElementById('eqStats').value.trim(),
-                note:document.getElementById('eqNote').value.trim(),
-                image:image,
-                charId: charId ? parseInt(charId) : null,
-                date:new Date().toLocaleDateString()
-            };
-            data.equipments.unshift(equip);
-            saveData();
-            closeModal('equip');
-            renderContent();
-            showToast('✅ 装备添加成功！');
-        }
-
-        function saveArticle(){
-            if(!isAdmin){showToast('❌ 无权限');return;}
-            const title=document.getElementById('artTitle').value.trim();if(!title){showToast('请输入标题');return;}
-            data.articles.unshift({id:Date.now(),title,job:document.getElementById('artJob').value,type:document.getElementById('artType').value,content:document.getElementById('artContent').value.trim(),date:new Date().toLocaleDateString()});
-            saveData();closeModal('article');renderContent();showToast('✅ 攻略发布成功！');
-        }
-
-        function saveCharacter(){
-            if(!isAdmin){showToast('❌ 无权限');return;}
-            const name=document.getElementById('charName').value.trim();
-            const image=document.getElementById('charImage').value.trim();
-            if(!name||!image){showToast('角色名和图片不能为空');return;}
-            
-            data.characters.push({
-                id:Date.now(),name,
-                server:document.getElementById('charServer').value,
-                job:document.getElementById('charJob').value,
-                power:document.getElementById('charPower').value.trim(),
-                image:image
-            });
-            saveData();closeModal('char');renderContent();showToast('✅ 角色添加成功！');
-        }
-
-        function saveData(){localStorage.setItem('ffo_data',JSON.stringify(data));updateDataStats();}
-        function updateDataStats(){document.getElementById('dataStats').textContent=`装备：${data.equipments.length} | 攻略：${data.articles.length} | 角色：${data.characters.length}`;}
-        function exportData(){if(!isAdmin)return;const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`ffo_backup_${new Date().toLocaleDateString()}.json`;a.click();URL.revokeObjectURL(url);showToast('✅ 数据已导出');}
-        function importData(e){if(!isAdmin)return;const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=(ev)=>{try{const imported=JSON.parse(ev.target.result);if(imported.equipments&&imported.articles&&imported.characters){data=imported;saveData();renderContent();showToast('✅ 数据导入成功！');}else throw new Error('格式错误');}catch(err){showToast('❌ 文件格式错误');}};reader.readAsText(file);}
-        function clearAllData(){if(!isAdmin)return;if(confirm('确定清空所有数据？不可恢复！')){data={equipments:[],articles:[],characters:[]};saveData();renderContent();showToast('🗑️ 数据已清空');}}
-        function showToast(msg){const toast=document.getElementById('toast');toast.textContent=msg;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),3000);}
-
-        document.addEventListener('keydown',(e)=>{if(e.key==='Escape'){document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('active'));document.getElementById('loginModal').classList.remove('active');closePreview();}});
-    </script>
-</body>
-</html>
