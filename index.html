@@ -267,19 +267,11 @@
             text-align: center; cursor: pointer;
             transition: all 0.3s; position: relative;
             background: rgba(255,215,0,0.02);
+            display: none;
         }
         .upload-area:hover, .upload-area.dragover {
             border-color: var(--gold); background: rgba(255,215,0,0.05);
         }
-        .upload-area input[type="file"] {
-            position: absolute; inset: 0; opacity: 0; cursor: pointer;
-        }
-        .upload-preview {
-            max-width: 100%; max-height: 200px;
-            border-radius: 8px; margin-top: 1rem;
-            display: none;
-        }
-        .upload-preview.active { display: block; }
 
         .form-row {
             display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
@@ -390,7 +382,6 @@
             color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
         }
 
-        /* 装备大图查看弹窗 */
         .preview-modal {
             display: none;
             position: fixed;
@@ -443,7 +434,6 @@
 <body>
     <div class="bg"></div><div class="stars"></div>
 
-    <!-- 大图预览弹窗 -->
     <div class="preview-modal" id="previewModal">
         <button class="preview-close" onclick="closePreview()">×</button>
         <img src="" id="previewImage" class="preview-content">
@@ -485,7 +475,6 @@
 
     <div class="container" id="mainContainer"></div>
 
-    <!-- 添加装备模态框 -->
     <div class="modal-overlay" id="modalEquip">
         <div class="modal">
             <div class="modal-header">
@@ -494,12 +483,10 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
-                        <input type="file" id="fileInput" accept="image/*" onchange="handleFileSelect(event)">
-                        <div style="font-size: 3rem; margin-bottom: 0.5rem;">📷</div>
-                        <div style="color: var(--gold); font-weight: bold; margin-bottom: 0.3rem;">点击上传装备截图</div>
-                        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.4);">支持拖拽上传，建议尺寸 800x600</div>
-                        <img class="upload-preview" id="previewImg">
+                    <label class="form-label">👉 装备图片地址（必填）</label>
+                    <input type="text" class="form-input" id="eqImage" placeholder="粘贴图片外链，https://开头">
+                    <div style="color:#aaa;font-size:12px;margin-top:5px;">
+                        上传图片到 imgchr.com → 复制【外链】粘贴进来
                     </div>
                 </div>
                 <div class="form-row">
@@ -573,7 +560,6 @@
         </div>
     </div>
 
-    <!-- 添加攻略模态框 -->
     <div class="modal-overlay" id="modalArticle">
         <div class="modal">
             <div class="modal-header">
@@ -619,7 +605,6 @@
         </div>
     </div>
 
-    <!-- 添加角色模态框 -->
     <div class="modal-overlay" id="modalChar">
         <div class="modal">
             <div class="modal-header">
@@ -628,12 +613,8 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <div class="upload-area" onclick="document.getElementById('charFile').click()">
-                        <input type="file" id="charFile" accept="image/*" onchange="handleCharFile(event)">
-                        <div style="font-size: 3rem;">👤</div>
-                        <div style="color: var(--gold); font-weight: bold;">上传角色截图</div>
-                        <img class="upload-preview" id="charPreview">
-                    </div>
+                    <label class="form-label">角色图片地址</label>
+                    <input type="text" class="form-input" id="charImage" placeholder="https://">
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -673,7 +654,6 @@
         </div>
     </div>
 
-    <!-- 数据管理模态框 -->
     <div class="modal-overlay" id="modalData">
         <div class="modal">
             <div class="modal-header">
@@ -718,38 +698,29 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        const ADMIN_PASSWORD = "00101699";
+        const ADMIN_PASSWORD = "123456";
         let isAdmin = false;
         let data = JSON.parse(localStorage.getItem('ffo_data')) || { equipments: [], articles: [], characters: [] };
         let currentTab = 'equip', currentServer = '全部', currentJob = '全部', currentCategory = '全部';
-        let tempImage = null;
-        let lastClickTime = 0;
 
         document.addEventListener('DOMContentLoaded', () => {
             renderContent();
-            setupDragDrop();
-            // 修复双击登录：绑定到document，防抖防误触
-            document.addEventListener('dblclick', (e) => {
-                if(!isAdmin) {
-                    document.getElementById('loginModal').classList.add('active');
-                }
+            document.addEventListener('dblclick', () => {
+                if(!isAdmin) document.getElementById('loginModal').classList.add('active');
             });
             updateDataStats();
         });
 
-        // 客服微信弹窗
         function showService() {
             alert("咨询价格请联系客服微信：17779195579");
         }
 
-        // 打开大图预览
         function openPreview(imgSrc, info) {
             document.getElementById('previewImage').src = imgSrc;
             document.getElementById('previewInfo').innerHTML = info;
             document.getElementById('previewModal').classList.add('active');
         }
 
-        // 关闭大图预览
         function closePreview() {
             document.getElementById('previewModal').classList.remove('active');
         }
@@ -766,7 +737,6 @@
             }
         }
 
-        // 优化切换标签：防抖+减少DOM重绘，解决卡顿
         function switchTab(tab, btn) {
             if(currentTab === tab) return;
             currentTab = tab;
@@ -777,7 +747,6 @@
 
         function renderContent() {
             const container = document.getElementById('mainContainer');
-            // 清空容器，减少内存占用
             container.innerHTML = '';
             switch(currentTab) {
                 case 'equip': container.innerHTML = renderEquipPage(); break;
@@ -812,11 +781,11 @@
             if (items.length === 0) {
                 html += `<div class="empty-state"><div class="icon">📦</div><h3>暂无装备</h3><p>点击图片可查看大图</p></div>`;
             } else {
-                html += '<div class="equip-grid">' + items.map((item, index) => `
+                html += '<div class="equip-grid">' + items.map((item) => `
                     <div class="equip-card" onclick="openPreview('${item.image}', '${item.name}<br>${item.server} | ${item.job} | ${item.price}')">
                         <div class="equip-img-wrap">
                             <span class="equip-badge badge-${item.grade}">${getGradeText(item.grade)}</span>
-                            <img src="${item.image}" alt="${item.name}" loading="lazy">
+                            <img src="${item.image}" alt="${item.name}">
                         </div>
                         <div class="equip-info">
                             <div class="equip-name">${item.name}</div>
@@ -874,8 +843,8 @@
         function renderCharPage() {
             if(data.characters.length===0) return `<div class="empty-state"><div class="icon">🎭</div><h3>暂无角色</h3></div>`;
             return `<div class="char-grid">${data.characters.map(ch=>`
-                <div class="char-card" onclick="openPreview('${ch.image || 'https://api.dicebear.com/7.x/avataaars/svg?seed='+ch.name}', '${ch.name}<br>${ch.server} | ${ch.job} | 战力：${ch.power || '?'}')">
-                    <img src="${ch.image||'https://api.dicebear.com/7.x/avataaars/svg?seed='+ch.name}" class="char-avatar" alt="${ch.name}">
+                <div class="char-card" onclick="openPreview('${ch.image}', '${ch.name}<br>${ch.server} | ${ch.job} | 战力：${ch.power || '?'}')">
+                    <img src="${ch.image}" class="char-avatar" alt="${ch.name}">
                     <div class="char-name">${ch.name}</div>
                     <div class="char-server">${ch.server} · ${ch.job}</div>
                     <div class="char-stats">
@@ -895,41 +864,53 @@
         }
         function closeModal(type){
             document.getElementById('modal'+type.charAt(0).toUpperCase()+type.slice(1)).classList.remove('active');
-            if(type==='equip'){tempImage=null;document.getElementById('previewImg').classList.remove('active');document.getElementById('fileInput').value='';['eqName','eqPrice','eqStats','eqNote'].forEach(id=>document.getElementById(id).value='');}
-        }
-
-        function handleFileSelect(e){
-            if(!isAdmin)return;
-            const file=e.target.files[0];if(!file)return;
-            const reader=new FileReader();reader.onload=(ev)=>{tempImage=ev.target.result;document.getElementById('previewImg').src=tempImage;document.getElementById('previewImg').classList.add('active');};reader.readAsDataURL(file);
-        }
-        function handleCharFile(e){
-            if(!isAdmin)return;
-            const file=e.target.files[0];if(!file)return;
-            const reader=new FileReader();reader.onload=(ev)=>{document.getElementById('charPreview').src=ev.target.result;document.getElementById('charPreview').classList.add('active');document.getElementById('charPreview').dataset.image=ev.target.result;};reader.readAsDataURL(file);
-        }
-
-        function setupDragDrop(){
-            const area=document.getElementById('uploadArea');['dragenter','dragover','dragleave','drop'].forEach(eventName=>{area.addEventListener(eventName,(e)=>{e.preventDefault();e.stopPropagation();});});['dragenter','dragover'].forEach(eventName=>{area.addEventListener(eventName,()=>area.classList.add('dragover'));});['dragleave','drop'].forEach(eventName=>{area.addEventListener(eventName,()=>area.classList.remove('dragover'));});area.addEventListener('drop',(e)=>{if(!isAdmin)return;const file=e.dataTransfer.files[0];if(file&&file.type.startsWith('image/')){const reader=new FileReader();reader.onload=(ev)=>{tempImage=ev.target.result;document.getElementById('previewImg').src=tempImage;document.getElementById('previewImg').classList.add('active');};reader.readAsDataURL(file);}});
         }
 
         function saveEquipment(){
             if(!isAdmin){showToast('❌ 无权限');return;}
-            const name=document.getElementById('eqName').value.trim();const server=document.getElementById('eqServer').value;const job=document.getElementById('eqJob').value;const category=document.getElementById('eqCategory').value;
-            if(!name||!server||!job||!category){showToast('请填写必填项');return;}
-            const equip={id:Date.now(),name,server,job,category,grade:document.getElementById('eqGrade').value,price:document.getElementById('eqPrice').value.trim()||'面议',stats:document.getElementById('eqStats').value.trim(),note:document.getElementById('eqNote').value.trim(),image:tempImage||'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200"><rect fill="%23151520" width="300" height="200"/><text fill="%23ffd700" x="50%" y="50%" text-anchor="middle">暂无图片</text></svg>',date:new Date().toLocaleDateString()};
-            data.equipments.unshift(equip);saveData();closeModal('equip');renderContent();showToast('✅ 装备添加成功！');
+            const name=document.getElementById('eqName').value.trim();
+            const server=document.getElementById('eqServer').value;
+            const job=document.getElementById('eqJob').value;
+            const category=document.getElementById('eqCategory').value;
+            const image=document.getElementById('eqImage').value.trim();
+            if(!name||!server||!job||!category||!image){showToast('带 * 号为必填项');return;}
+            
+            const equip={
+                id:Date.now(),name,server,job,category,
+                grade:document.getElementById('eqGrade').value,
+                price:document.getElementById('eqPrice').value.trim()||'面议',
+                stats:document.getElementById('eqStats').value.trim(),
+                note:document.getElementById('eqNote').value.trim(),
+                image:image,
+                date:new Date().toLocaleDateString()
+            };
+            data.equipments.unshift(equip);
+            saveData();
+            closeModal('equip');
+            renderContent();
+            showToast('✅ 装备添加成功！全世界都能看到啦！');
         }
+
         function saveArticle(){
             if(!isAdmin){showToast('❌ 无权限');return;}
             const title=document.getElementById('artTitle').value.trim();if(!title){showToast('请输入标题');return;}
             data.articles.unshift({id:Date.now(),title,job:document.getElementById('artJob').value,type:document.getElementById('artType').value,content:document.getElementById('artContent').value.trim(),date:new Date().toLocaleDateString()});
             saveData();closeModal('article');renderContent();showToast('✅ 攻略发布成功！');
         }
+
         function saveCharacter(){
             if(!isAdmin){showToast('❌ 无权限');return;}
-            const name=document.getElementById('charName').value.trim();if(!name){showToast('请输入角色名');return;}
-            data.characters.push({id:Date.now(),name,server:document.getElementById('charServer').value,job:document.getElementById('charJob').value,power:document.getElementById('charPower').value.trim(),image:document.getElementById('charPreview').dataset.image||null});
+            const name=document.getElementById('charName').value.trim();
+            const image=document.getElementById('charImage').value.trim();
+            if(!name||!image){showToast('角色名和图片不能为空');return;}
+            
+            data.characters.push({
+                id:Date.now(),name,
+                server:document.getElementById('charServer').value,
+                job:document.getElementById('charJob').value,
+                power:document.getElementById('charPower').value.trim(),
+                image:image
+            });
             saveData();closeModal('char');renderContent();showToast('✅ 角色添加成功！');
         }
 
@@ -940,11 +921,6 @@
         function clearAllData(){if(!isAdmin)return;if(confirm('确定清空所有数据？不可恢复！')){data={equipments:[],articles:[],characters:[]};saveData();renderContent();showToast('🗑️ 数据已清空');}}
         function showToast(msg){const toast=document.getElementById('toast');toast.textContent=msg;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),3000);}
 
-        // 全局关闭弹窗
-        document.querySelectorAll('.modal-overlay').forEach(overlay=>{overlay.addEventListener('click',(e)=>{if(e.target===overlay)overlay.classList.remove('active');});});
-        document.getElementById('previewModal').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('previewModal')) closePreview();
-        });
         document.addEventListener('keydown',(e)=>{if(e.key==='Escape'){document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('active'));document.getElementById('loginModal').classList.remove('active');closePreview();}});
     </script>
 </body>
