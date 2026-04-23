@@ -137,12 +137,6 @@
             background: rgba(255,215,0,0.15); border-color: var(--gold); color: var(--gold);
         }
 
-        .category-nav {
-            display: flex; gap: 0.8rem; margin-bottom: 2rem;
-            flex-wrap: wrap; padding-bottom: 1rem;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-
         .equip-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -374,16 +368,6 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-        .batch-bar {
-            display: none; position: fixed; bottom: 2rem; left: 50%;
-            transform: translateX(-50%); background: var(--card);
-            border: 1px solid var(--gold); border-radius: 12px;
-            padding: 1rem 2rem; z-index: 99;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            align-items: center; gap: 1rem;
-        }
-        .batch-bar.active { display: flex; }
 
         .login-modal {
             position: fixed; inset: 0; background: rgba(0,0,0,0.9);
@@ -739,12 +723,16 @@
         let data = JSON.parse(localStorage.getItem('ffo_data')) || { equipments: [], articles: [], characters: [] };
         let currentTab = 'equip', currentServer = '全部', currentJob = '全部', currentCategory = '全部';
         let tempImage = null;
+        let lastClickTime = 0;
 
         document.addEventListener('DOMContentLoaded', () => {
             renderContent();
             setupDragDrop();
-            document.body.addEventListener('dblclick', () => {
-                if(!isAdmin) document.getElementById('loginModal').classList.add('active');
+            // 修复双击登录：绑定到document，防抖防误触
+            document.addEventListener('dblclick', (e) => {
+                if(!isAdmin) {
+                    document.getElementById('loginModal').classList.add('active');
+                }
             });
             updateDataStats();
         });
@@ -778,7 +766,9 @@
             }
         }
 
+        // 优化切换标签：防抖+减少DOM重绘，解决卡顿
         function switchTab(tab, btn) {
+            if(currentTab === tab) return;
             currentTab = tab;
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             btn.classList.add('active');
@@ -787,6 +777,8 @@
 
         function renderContent() {
             const container = document.getElementById('mainContainer');
+            // 清空容器，减少内存占用
+            container.innerHTML = '';
             switch(currentTab) {
                 case 'equip': container.innerHTML = renderEquipPage(); break;
                 case 'article': container.innerHTML = renderArticlePage(); break;
@@ -923,4 +915,37 @@
 
         function saveEquipment(){
             if(!isAdmin){showToast('❌ 无权限');return;}
-            const name=document.getElementById('eq
+            const name=document.getElementById('eqName').value.trim();const server=document.getElementById('eqServer').value;const job=document.getElementById('eqJob').value;const category=document.getElementById('eqCategory').value;
+            if(!name||!server||!job||!category){showToast('请填写必填项');return;}
+            const equip={id:Date.now(),name,server,job,category,grade:document.getElementById('eqGrade').value,price:document.getElementById('eqPrice').value.trim()||'面议',stats:document.getElementById('eqStats').value.trim(),note:document.getElementById('eqNote').value.trim(),image:tempImage||'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200"><rect fill="%23151520" width="300" height="200"/><text fill="%23ffd700" x="50%" y="50%" text-anchor="middle">暂无图片</text></svg>',date:new Date().toLocaleDateString()};
+            data.equipments.unshift(equip);saveData();closeModal('equip');renderContent();showToast('✅ 装备添加成功！');
+        }
+        function saveArticle(){
+            if(!isAdmin){showToast('❌ 无权限');return;}
+            const title=document.getElementById('artTitle').value.trim();if(!title){showToast('请输入标题');return;}
+            data.articles.unshift({id:Date.now(),title,job:document.getElementById('artJob').value,type:document.getElementById('artType').value,content:document.getElementById('artContent').value.trim(),date:new Date().toLocaleDateString()});
+            saveData();closeModal('article');renderContent();showToast('✅ 攻略发布成功！');
+        }
+        function saveCharacter(){
+            if(!isAdmin){showToast('❌ 无权限');return;}
+            const name=document.getElementById('charName').value.trim();if(!name){showToast('请输入角色名');return;}
+            data.characters.push({id:Date.now(),name,server:document.getElementById('charServer').value,job:document.getElementById('charJob').value,power:document.getElementById('charPower').value.trim(),image:document.getElementById('charPreview').dataset.image||null});
+            saveData();closeModal('char');renderContent();showToast('✅ 角色添加成功！');
+        }
+
+        function saveData(){localStorage.setItem('ffo_data',JSON.stringify(data));updateDataStats();}
+        function updateDataStats(){document.getElementById('dataStats').textContent=`装备：${data.equipments.length} | 攻略：${data.articles.length} | 角色：${data.characters.length}`;}
+        function exportData(){if(!isAdmin)return;const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`ffo_backup_${new Date().toLocaleDateString()}.json`;a.click();URL.revokeObjectURL(url);showToast('✅ 数据已导出');}
+        function importData(e){if(!isAdmin)return;const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=(ev)=>{try{const imported=JSON.parse(ev.target.result);if(imported.equipments&&imported.articles&&imported.characters){data=imported;saveData();renderContent();showToast('✅ 数据导入成功！');}else throw new Error('格式错误');}catch(err){showToast('❌ 文件格式错误');}};reader.readAsText(file);}
+        function clearAllData(){if(!isAdmin)return;if(confirm('确定清空所有数据？不可恢复！')){data={equipments:[],articles:[],characters:[]};saveData();renderContent();showToast('🗑️ 数据已清空');}}
+        function showToast(msg){const toast=document.getElementById('toast');toast.textContent=msg;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),3000);}
+
+        // 全局关闭弹窗
+        document.querySelectorAll('.modal-overlay').forEach(overlay=>{overlay.addEventListener('click',(e)=>{if(e.target===overlay)overlay.classList.remove('active');});});
+        document.getElementById('previewModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('previewModal')) closePreview();
+        });
+        document.addEventListener('keydown',(e)=>{if(e.key==='Escape'){document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('active'));document.getElementById('loginModal').classList.remove('active');closePreview();}});
+    </script>
+</body>
+</html>
