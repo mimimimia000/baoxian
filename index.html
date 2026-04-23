@@ -493,7 +493,10 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label class="form-label">👉 装备图片地址（必填）</label>
-                    <input type="text" class="form-input" id="eqImage" placeholder="粘贴图片外链，https://开头，结尾带.png/.jpg">
+                    <input type="text" class="form-input" id="eqImage" placeholder="输入本地图片路径，如：images/equip1.jpg">
+                    <div style="color:#aaa;font-size:12px;margin-top:5px;">
+                        把图片放进项目里的images文件夹，路径格式为：images/你的图片名.jpg
+                    </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -615,7 +618,10 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label class="form-label">角色图片地址</label>
-                    <input type="text" class="form-input" id="charImage" placeholder="https://">
+                    <input type="text" class="form-input" id="charImage" placeholder="images/char1.jpg">
+                    <div style="color:#aaa;font-size:12px;margin-top:5px;">
+                        格式：images/你的角色图片名.jpg
+                    </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -733,7 +739,6 @@
                 isAdmin = true;
                 document.getElementById('loginModal').classList.remove('active');
                 document.getElementById('adminBtns').style.display = 'flex';
-                // 登录后显示删除按钮
                 document.querySelectorAll('.delete-btn').forEach(btn => btn.style.display = 'block');
                 showToast('✅ 管理员登录成功！');
             } else {
@@ -765,7 +770,6 @@
                     }
                     break;
             }
-            // 管理员登录后显示删除按钮
             if(isAdmin) {
                 document.querySelectorAll('.delete-btn').forEach(btn => btn.style.display = 'block');
             }
@@ -931,7 +935,6 @@
         function openModal(type){
             if(!isAdmin){showToast('❌ 仅管理员可操作');return;}
             document.getElementById('modal'+type.charAt(0).toUpperCase()+type.slice(1)).classList.add('active');
-            // 打开装备添加弹窗时，更新角色列表
             if(type === 'equip') {
                 const charSelect = document.getElementById('eqChar');
                 charSelect.innerHTML = '<option value="">无（通用装备）</option>';
